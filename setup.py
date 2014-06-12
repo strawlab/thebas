@@ -26,14 +26,14 @@ setup(
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
     ],
-    require=['h5py',
-             'pymc',
-             'numpy',
-             'matplotlib',
-             'pandas',
-             'joblib',
-             'scipy',
-             'dill',
-             'argh'],  # FIXME: Make clear which versions
-                       # https://caremad.io/blog/setup-vs-requirement/
+    requires=['h5py',
+              'pymc',
+              'numpy',
+              'matplotlib',
+              'pandas',
+              'joblib',
+              'scipy',
+              'dill',
+              'argh'],  # FIXME: Make clear which versions
+                        # https://caremad.io/blog/setup-vs-requirement/
 )

@@ -112,7 +112,7 @@ def read_perturbation_experiment_data(hdf5file, smooth=True, use_lowpass=True, r
     stk = Strokelitude(hdf5file)
     wba = stk.wba()                       # The wingbeat amplitude (well, maybe just R-L)
     lwi, rwi = stk.lwi(), stk.rwi()       # Wingbox intensities, to remove silences
-    _, _, wba_t = stk.ts()                # Timestamps for wba measurements (seconds)
+    wba_t = stk.t()                       # Timestamps for wba measurements (seconds)
     dt = np.mean(wba_t[1:] - wba_t[:-1])  # Sampling period (seconds)
     tsd = TetheredSinewaveData(hdf5file)
     _, ga, _, _, _, _, _ = tsd.nfga()     # Ground angles
@@ -275,11 +275,10 @@ if __name__ == '__main__':
     # print by_group_and_freq.describe()
     for (group, freq), data in by_group_and_freq:  # for each of these, we need to build a model
                                                    # we can even add an upper level to shrink to a "common" fly
-                                                   # probably the latest does not make so much sense
         print(group, freq)    # genotype, perturbation frequency
         for index, row in data.iterrows():
             print(index)      # this is meaningless, as it is just the row number before grouping
             print(row.fly)    # fly id
             print(row.wba_t)  # times for the measuments
             print(row.wba)    # R-L
-            print(row.ga)     # ground angle
+            # print(row.ga)     # ground angle
