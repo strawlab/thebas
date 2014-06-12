@@ -14,10 +14,10 @@ from pymc.utils import hpd
 from pymc.diagnostics import gelman_rubin
 from pandas import DataFrame
 import matplotlib.pyplot as plt
-from thebas.externals.tethered_data.examples.perturbation_experiment import perturbation_data_to_records, all_biases
 from thebas.misc import ensure_dir
 from thebas.sinefitting import DEFAULT_MCMC_RESULTS_DIR, DEFAULT_PLOTS_DIR
 from thebas.sinefitting.models import perturbation_signal
+from thebas.sinefitting.perturbation_experiment import all_biases, perturbation_data_to_records
 from thebas.sinefitting.results import MCMCRunManager
 
 
