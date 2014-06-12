@@ -248,7 +248,7 @@ def perturbation_data_to_kabuki(overwrite_cached=False):
     data = perturbation_data_to_records()
     records = []
     for _, row in data.iterrows():
-        for wba, wba_t, ga in izip(row.wba, row.wba_t, row.ga):
+        for wba, wba_t, ga in izip(row['wba'], row['wba_t'], row['ga']):
             records.append((row['group'], row['freq'], row['fly'], wba, wba_t, ga))
     df = DataFrame(data=records, columns=('group', 'freq', 'subj_idx', 'wba', 'wba_t', 'ga'))
          # subj_idx is hardcoded in kabuki ATM

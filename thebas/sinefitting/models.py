@@ -23,7 +23,7 @@ def sanity_checks(data):
     if len(present_groups) > 1:
         raise Exception('Each group must correspond to only one genotype')
     # Check that all the flys have different ids
-    if len(data.fly.unique()) < len(data.fly):
+    if len(data['fly'].unique()) < len(data['fly']):
         raise Exception('There are duplicated fly ids')
 
 
@@ -38,11 +38,11 @@ def group_phase_model1(group_id, group_data, min_num_obs=10):
 
     def fly_model(fly):
 
-        freq = fly.freq
-        time = fly.wba_t
-        signal = fly.wba
+        freq = fly['freq']
+        time = fly['wba_t']
+        signal = fly['wba']
         max_amplitude = np.max(np.abs(signal))  # Any usefulness normalizing the range to [0, 1]?
-        flyid = fly.fly
+        flyid = fly['fly']
 
         #--- priors
         phase_kappa = pymc.Uniform(flyid + '_kappa', 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
@@ -72,7 +72,7 @@ def group_phase_model1(group_id, group_data, min_num_obs=10):
     model = [group_phase, group_phase_mu, group_phase_kappa]
 
     for _, fly in group_data.iterrows():
-        if len(fly.wba) > min_num_obs:
+        if len(fly['wba']) > min_num_obs:
             model += fly_model(fly)
 
     return model
@@ -95,10 +95,10 @@ def group_phase_model2(group_id, group_data, min_num_obs=10):
 
     def fly_model(fly):
 
-        time = fly.wba_t
-        signal = fly.wba
+        time = fly['wba_t']
+        signal = fly['wba']
         max_amplitude = np.max(np.abs(signal))  # Any usefulness normalizing the range to [0, 1]?
-        flyid = fly.fly
+        flyid = fly['fly']
 
         #--- priors
         phase_kappa = pymc.Uniform(flyid + '_kappa', 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
@@ -132,7 +132,7 @@ def group_phase_model2(group_id, group_data, min_num_obs=10):
     model = [group_phase, group_phase_mu, group_phase_kappa, group_frequency_tau, group_frequency]
 
     for _, fly in group_data.iterrows():
-        if len(fly.wba) > min_num_obs:
+        if len(fly['wba']) > min_num_obs:
             model += fly_model(fly)
 
     return model
@@ -147,17 +147,17 @@ def group_phase_amplitude_model3(group_id, group_data, min_num_obs=10):
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=0)
     group_phase = pymc.CircVonMises('phase_' + group_id, group_phase_mu, group_phase_kappa)
     # group amplitude
-    max_amplitude = np.max([np.max(np.abs(fly.wba)) for _, fly in group_data.iterrows()])
+    max_amplitude = np.max([np.max(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude = pymc.Uniform('amplitude_' + group_id, lower=0, upper=max_amplitude)
                                                                     # just max_amplitude is ok
 
     def fly_model(fly):
 
-        freq = fly.freq
-        time = fly.wba_t
-        signal = fly.wba
+        freq = fly['freq']
+        time = fly['wba_t']
+        signal = fly['wba']
         max_amplitude = np.max(np.abs(signal))  # Any usefulness normalizing the range to [0, 1]?
-        flyid = fly.fly
+        flyid = fly['fly']
 
         #--- priors
         phase_kappa = pymc.Uniform('kappa_' + flyid, 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
@@ -182,7 +182,7 @@ def group_phase_amplitude_model3(group_id, group_data, min_num_obs=10):
     model = [group_phase, group_phase_mu, group_phase_kappa, group_amplitude]
 
     for _, fly in group_data.iterrows():
-        if len(fly.wba) > min_num_obs:
+        if len(fly['wba']) > min_num_obs:
             model += fly_model(fly)
 
     return model
@@ -206,11 +206,11 @@ def group_phase_amplitude_model4(group_id, group_data, min_num_obs=10):
 
     def fly_model(fly):
 
-        freq = fly.freq
-        time = fly.wba_t
-        signal = fly.wba
+        freq = fly['freq']
+        time = fly['wba_t']
+        signal = fly['wba']
         max_amplitude = np.max(np.abs(signal))  # Any usefulness normalizing the range to [0, 1]?
-        flyid = fly.fly
+        flyid = fly['fly']
 
         #--- priors
         phase_kappa = pymc.Uniform('kappa_' + flyid, 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
@@ -236,7 +236,7 @@ def group_phase_amplitude_model4(group_id, group_data, min_num_obs=10):
     model = [group_phase, group_phase_mu, group_phase_kappa, group_amplitude_a, group_amplitude_b, group_amplitude]
 
     for _, fly in group_data.iterrows():
-        if len(fly.wba) > min_num_obs:
+        if len(fly['wba']) > min_num_obs:
             model += fly_model(fly)
 
     return model

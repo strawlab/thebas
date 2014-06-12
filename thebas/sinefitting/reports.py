@@ -262,10 +262,10 @@ def bias_vs_wba_plots(img_format='png', transpose=True, legend=False):
 
     dest_dir = ensure_dir(op.join(DEFAULT_PLOTS_DIR, 'bias_vs_wba'))
     for freq, data in by_freq:
-        min_t = min([wba_t.min() for wba_t in data.wba_t if len(wba_t) > 0])
-        max_t = max([wba_t.max() for wba_t in data.wba_t if len(wba_t) > 0])
-        min_wba = min([wba.min() for wba in data.wba if len(wba) > 0])
-        max_wba = max([wba.max() for wba in data.wba if len(wba) > 0])
+        min_t = min([wba_t.min() for wba_t in data['wba_t'] if len(wba_t) > 0])
+        max_t = max([wba_t.max() for wba_t in data['wba_t'] if len(wba_t) > 0])
+        min_wba = min([wba.min() for wba in data['wba'] if len(wba) > 0])
+        max_wba = max([wba.max() for wba in data['wba'] if len(wba) > 0])
         for flyid, data in data.groupby(('fly',)):
             print(flyid, freq)
             if len(data) > 1:
@@ -273,7 +273,7 @@ def bias_vs_wba_plots(img_format='png', transpose=True, legend=False):
             # Fly wba trajectory
             data = data.iloc[0]
             group = data.group
-            x, y = np.array(data.wba_t), np.array(data.wba)
+            x, y = np.array(data['wba_t']), np.array(data['wba'])
             x, y = mark_discontinuities(x, y, use_x=True, threshold=0.02)
             # Ideal perturbation signal
             amplitude = (max_wba - min_wba) / 2.
@@ -329,7 +329,7 @@ def bias_vs_meanwba_plots(img_format='png', transpose=True, column_to_mean='wba'
             num_obs = min_num_obs(group_data)
         wba = np.array([np.array(wba)[:num_obs] for wba in group_data[column_to_mean]])
         wba = np.nanmean(wba, axis=0)
-        wba_t = np.array(group_data.irow(0).wba_t)[:num_obs]
+        wba_t = np.array(group_data.irow(0)['wba_t'])[:num_obs]
         return wba_t, wba
 
     def one_group_plot(axes,
