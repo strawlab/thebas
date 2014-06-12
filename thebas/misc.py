@@ -10,7 +10,7 @@ def home():
 
 
 def ensure_writable_dir(path):
-    """Ensures that a path is a writable directory."""
+    """Ensures that a path is a writable directory and returns the directory itself."""
     def check_path(path):
         if not op.isdir(path):
             raise Exception('%s exists but it is not a directory' % path)
@@ -26,7 +26,8 @@ def ensure_writable_dir(path):
                 check_path(path)
             else:
                 raise
+    return path
 
 
 def ensure_dir(path):
-    ensure_writable_dir(path)
+    return ensure_writable_dir(path)
