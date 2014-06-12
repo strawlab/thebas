@@ -54,7 +54,7 @@ def cl(MODELS=('gpa3nomap',),
     """Generates command lines to launch the script with different parameters."""
     for model, af, genotype in product(MODELS, FREQS, GROUPS):
         expid = '%s__%s__%g' % (model, genotype, af)
-        print('python2 -u bayesian/sinefitting/samplers.py sample '
+        print('python2 -u thebas/sinefitting/samplers.py sample '
               '--freq %g '
               '--genotype-id %s '
               '--model-id %s '
