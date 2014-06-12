@@ -7,21 +7,23 @@ A burden-free way to run this code is to use strz.
 There all the dependencies should already installed when using anaconda python in */opt/anaconda*.
 
 ```sh
-# All dependencies should already be installed in strz (at least in the anaconda distro in /opt)
+# All dependencies should already be installed in strz 
+# (at least in the anaconda distro in /opt)
 ssh strawlab@strz
 # Clone the repository
 git clone https://github.com/strawlab/thebas
 ```
 
 For the perturbation analysis experiments, it is easy to reproduce our results.
-
-The results are stored in *"thebas/sinefitting/MCMC"* 
+ 
 ```sh
 # Go to the cloned repository
 cd thebas
 
-# The data is read from *"/mnt/strawscience/data/forSANTI/closed_loop_perturbations"*.
-# This munges these data into a more suitable format for analysis, it is an example doing some crazy printing
+# The data is read from 
+#   *"/mnt/strawscience/data/forSANTI/closed_loop_perturbations"*.
+# This munges these data into a more suitable format for analysis 
+# It is an example of data loading that also does some crazy printing
 PYTHONPATH=$PYTHONPATH:. /opt/anaconda/bin/python thebas/sinefitting/perturbation_experiment.py
 
 # This shows examples of command lines that can be used to fit bayesian models...
