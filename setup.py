@@ -34,6 +34,7 @@ setup(
               'joblib',
               'scipy',
               'dill',
-              'argh'],  # FIXME: Make clear which versions
-                        # https://caremad.io/blog/setup-vs-requirement/
+              'argh',
+              'pydot'],  # FIXME: Make clear which versions
+                         # https://caremad.io/blog/setup-vs-requirement/
 )
