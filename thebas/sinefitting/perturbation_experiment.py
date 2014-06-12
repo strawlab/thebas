@@ -15,7 +15,7 @@ from thebas.externals.tethered_data.strokelitude import Strokelitude, filter_sig
 
 PERTURBATION_BIAS_DATA_ROOT = op.join(op.expanduser('~'), 'data-analysis', 'closed_loop_perturbations', 'forSANTI')
 if not op.isdir(PERTURBATION_BIAS_DATA_ROOT):
-    PERTURBATION_BIAS_DATA_ROOT = '/mnt/strawarchive_smb/data/forSANTI/closed_loop_perturbations'
+    PERTURBATION_BIAS_DATA_ROOT = '/mnt/strawscience/data/forSANTI/closed_loop_perturbations'
 PERTURBATION_BIAS_SILENCED_FLIES = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTE')
 PERTURBATION_BIAS_KINDAWT_FLIES = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTin')
 TEST_HDF5 = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTE', '2012-12-18-16-04-06.hdf5')
