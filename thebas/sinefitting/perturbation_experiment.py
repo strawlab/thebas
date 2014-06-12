@@ -278,7 +278,7 @@ if __name__ == '__main__':
         print(group, freq)    # genotype, perturbation frequency
         for index, row in data.iterrows():
             print(index)      # this is meaningless, as it is just the row number before grouping
-            print(row.fly)    # fly id
-            print(row.wba_t)  # times for the measuments
-            print(row.wba)    # R-L
+            print(row['fly'])    # fly id
+            print(row['wba_t'])  # times for the measuments
+            print(row['wba'])    # R-L
             # print(row.ga)     # ground angle
