@@ -1,24 +1,34 @@
 # coding=utf-8
-"""Data munging from the sisusoidal-perturbation experiments, focused on data-preparation for bayesian modelling."""
+"""Data munging from the sisusoidal-perturbation experiments, focused on data-preparation for Bayesian modelling.
+
+THE method you probably want to use is this (at the end of the file):
+  perturbation_data_to_records
+"main" (at the end of the file) shows some examples
+"""
 from glob import glob
-from itertools import izip
 import os.path as op
 
 import h5py
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+
 from thebas.externals.tethered_data.misc import rostimearr2datetimeidx
 from thebas.externals.tethered_data.strokelitude import Strokelitude, filter_signals_gaussian, filter_signals_lowpass, \
     detect_noflight, remove_noflight
 
 
-PERTURBATION_BIAS_DATA_ROOT = op.join(op.expanduser('~'), 'data-analysis', 'closed_loop_perturbations', 'forSANTI')
+PERTURBATION_BIAS_DATA_ROOT = op.join(op.expanduser('~'), 'data-analysis', 'closed_loop_perturbations', 'data')
 if not op.isdir(PERTURBATION_BIAS_DATA_ROOT):
-    PERTURBATION_BIAS_DATA_ROOT = '/mnt/strawscience/data/forSANTI/closed_loop_perturbations'
+    PERTURBATION_BIAS_DATA_ROOT = '/mnt/strawscience/santi/dcn-tethered-bayesian/data'
 PERTURBATION_BIAS_SILENCED_FLIES = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTE')
 PERTURBATION_BIAS_KINDAWT_FLIES = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTin')
 TEST_HDF5 = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTE', '2012-12-18-16-04-06.hdf5')
+
+
+####################################
+# Convenient access to the data as provided by strokelitude
+####################################
 
 
 class TetheredSinewaveData(object):
@@ -84,9 +94,9 @@ def all_biases():
     biases = {}
     for root in flies_dirs:
         for hdf5 in glob(op.join(root, '*.hdf5')):
-            fly_id = op.basename(hdf5)[:-len('.hdf5')]
+            flyid = op.basename(hdf5)[:-len('.hdf5')]
             bias, _, _, bias_t = TetheredSinewaveData(hdf5).bias()
-            biases[fly_id] = (bias, bias_t)
+            biases[flyid] = (bias, bias_t)
     return biases
 
 
@@ -103,11 +113,11 @@ def perturbation_bias_info():
                                                       # But that could be inconvenient for Lisa and maybe the fly.
     freqs_start_stop_times = np.append(0, np.cumsum(freqs_on_durations))
     return freqs, freqs_on_durations, freqs_start_stop_times
-    # TODO: Infer this in a general way from the bias signal itself
+    # we might infer this in a general way from the bias signal itself
 
 
-def read_perturbation_experiment_data(hdf5file, smooth=True, use_lowpass=True, remove_silences=True):
-    """Returns a map {freq->(wba, wba_t)}, after smoothing and removing silences."""
+def read_perturbation_experiment_data(hdf5file, smooth=True, use_lowpass=False, remove_silences=True):
+    """Returns a map {freq->(wba, wba_t, ga)}, after smoothing and removing silences."""
     # Load recorded data
     stk = Strokelitude(hdf5file)
     wba = stk.wba()                       # The wingbeat amplitude (well, maybe just R-L)
@@ -123,7 +133,6 @@ def read_perturbation_experiment_data(hdf5file, smooth=True, use_lowpass=True, r
         lwi, rwi, wba = signal_filter(lwi, rwi, wba)
 
     # Detect not flying periods and *remove* them
-    # N.B. here there is a difference with Andrew that computes the threshold on the unsmoothed data
     if remove_silences:
         noflight_mask = detect_noflight(lwi, rwi)
         wba_t, wba, ga = remove_noflight(noflight_mask, wba_t, wba, ga)
@@ -172,7 +181,7 @@ def kindawt_data(remove_silences=True):
 
 
 def all_perturbation_data(remove_silences=True):
-    """{group_name -> {flyname -> {freq -> (wba, wba_t)}}}"""
+    """{group_name -> {flyname -> {freq -> (wba, wba_t, ga)}}}"""
     return dict([silenced_data(remove_silences=remove_silences), kindawt_data(remove_silences=remove_silences)])
 
 
@@ -191,30 +200,87 @@ def print_data_sizes_summary(data=None):
         print('*' * 80)
 
 
+####################################
+# A record per (fly, genotype, frequency) makes for the most sensible access scheme
+####################################
+
+#---- library independent HDF5 format (to forget about pickles / pytables and anything less standard/durable)
+
+def _save_record_data_to_hdf5(data, hdf_file):
+    with h5py.File(hdf_file, 'w-') as h5:
+        for _, row in data.iterrows():
+            exp = h5.require_group(row['flyid'])
+            exp.attrs['genotype'] = row['genotype']
+            freq = exp.require_group('freq=%g' % row['freq'])
+            freq.attrs['freq'] = row['freq']
+            freq.create_dataset('wba_t', data=row['wba_t'], compression='lzf')
+            freq.create_dataset('wba', data=row['wba'], compression='lzf')
+            freq.create_dataset('ga', data=row['ga'], compression='lzf')
+            freq.attrs['ideal_start'] = row['ideal_start']
+            freq.attrs['ideal_stop'] = row['ideal_stop']
+            freq.attrs['ideal_numobs'] = row['ideal_numobs']
+            freq.attrs['numobs'] = row['numobs']
+
+
+def _load_record_data_from_hdf5(hdf_file=op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5')):
+    all_records = []
+    with h5py.File(hdf_file, 'r') as h5:
+        for flyid, flydata in h5.iteritems():
+            genotype = flydata.attrs['genotype']
+            for _, freqdata in flydata.iteritems():
+                all_records.append((
+                    flyid,
+                    genotype,
+                    freqdata.attrs['freq'],
+                    freqdata['wba_t'][:],
+                    freqdata['wba'][:],
+                    freqdata['ga'][:],
+                    freqdata.attrs['ideal_start'],
+                    freqdata.attrs['ideal_stop'],
+                    freqdata.attrs['ideal_numobs'],
+                    freqdata.attrs['numobs']
+                ))
+    return pd.DataFrame(data=all_records, columns=('flyid', 'genotype', 'freq',
+                                                   'wba_t', 'wba', 'ga',
+                                                   'ideal_start', 'ideal_stop', 'ideal_numobs', 'numobs'))
+
+
 def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, remove_silences=True):
     """Reads the perturbation experiment data into a pandas dataset, in records with the following columns:
-       - group: the group (genotype) of the fly
-       - fly: the flyid
-       - freq: the frequency of the perturbation
-       - wba_t: the times of each instantaneous measurement
-       - wba: the R-L wingbeat amplitude
+       - flyid: the id of the fly
+       - genotype: the genotype of the fly
+       - freq: the frequency of the perturbation (rad/s)
+       - wba_t: the times of each instantaneous measurement (series of seconds)
+       - wba: the R-L wingbeat amplitude (series of rad)
+       - ga: the ground-angle (series of rad)
        - ideal_start: when the recording started (in seconds, based on 0-start)
        - ideal_stop: when the recording stopped (in seconds, based on 0-start)
        - ideal_numobs: an approximation to the maximum number of observations
        - numobs: the real number of observations (without not-flying periods)
 
-    Parameters:
-      - data: groups data as returned by "all_perturbations_data", which is the default if data is None
-      - dt: the sampling period (note that the ideal sampling rate was 100Hz)
-
     N.B. Assumes that the data fits comfortably in memory
+
+    Parameters
+    ----------
+    data: dictionary
+      groups data as returned by "all_perturbations_data", which is the default if data is None
+    dt: float, default 0.01
+      the sampling period (note that the "ideal" sampling rate was 100Hz)
+    overwrite_cached: boolean, default False
+      if True, a possibly existent cache is overwritten
+    remove_silences: boolean, default True
+      if True, the silences (periods in which the fly is not flying) is removed
+
+    Returns
+    -------
+    That pandas dataframe
     """
-    CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'munged_data.pickle') if remove_silences else \
-        op.join(PERTURBATION_BIAS_DATA_ROOT, 'munged_data_with_silences.pickle')
+    CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5') if remove_silences else \
+        op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.h5')
 
     # Return cached data
-    if op.exists(CACHE_FILE) and not overwrite_cached:
-        return pd.read_pickle(CACHE_FILE)
+    if op.isfile(CACHE_FILE) and not overwrite_cached:
+        return _load_record_data_from_hdf5(CACHE_FILE)
 
     # Remunge
     if data is None:
@@ -224,7 +290,7 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
         for flyname, f2obs in flies.iteritems():
             for freq, (wba, wba_t, ga) in f2obs.iteritems():
                 records.append((group, flyname, freq, wba_t, wba, ga))
-    df = DataFrame(records, columns=('group', 'fly', 'freq', 'wba_t', 'wba', 'ga'))
+    df = DataFrame(records, columns=('genotype', 'flyid', 'freq', 'wba_t', 'wba', 'ga'))
     # "Observation period"
     freqs, _, freqs_start_stop_times = perturbation_bias_info()
     f2times = {f: (freqs_start_stop_times[i], freqs_start_stop_times[i + 1]) for i, f in enumerate(freqs)}
@@ -234,51 +300,25 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
     df['numobs'] = df.apply(lambda row: len(row['wba']), axis=1)
 
     # Cache
-    df.to_pickle(CACHE_FILE)
+    _save_record_data_to_hdf5(df, CACHE_FILE)
 
-    return df
-
-
-def perturbation_data_to_kabuki(overwrite_cached=False):
-    # we need to put each observation in a record...
-    CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'munged_data_kabuki.pickle')
-    # Return cached data
-    if op.exists(CACHE_FILE) and not overwrite_cached:
-        return pd.read_pickle(CACHE_FILE)
-    data = perturbation_data_to_records()
-    records = []
-    for _, row in data.iterrows():
-        for wba, wba_t, ga in izip(row['wba'], row['wba_t'], row['ga']):
-            records.append((row['group'], row['freq'], row['fly'], wba, wba_t, ga))
-    df = DataFrame(data=records, columns=('group', 'freq', 'subj_idx', 'wba', 'wba_t', 'ga'))
-         # subj_idx is hardcoded in kabuki ATM
-    df.to_pickle(CACHE_FILE)
     return df
 
 
 if __name__ == '__main__':
 
-    GROUPS = ('VT37804_TNTE', 'VT37804_TNTin')   # DCN-silenced, control
-    FREQS = (.5, 1., 2., 4., 8., 16., 32., 40.)  # rad/s
-    # http://en.wikipedia.org/wiki/Frequency#Other_types_of_frequency
-    # http://en.wikipedia.org/wiki/Angular_frequency
+    GENOTYPES = ('VT37804_TNTE', 'VT37804_TNTin')   # DCN-silenced, control
+    FREQS = (.5, 1., 2., 4., 8., 16., 32., 40.)     # angular frequencies (rad/s)
 
     # Record format + pandas make exploration easier...
     print('Reading the data...')
     df = perturbation_data_to_records()
 
-    # Report average number of observations for each frequency and group
-    numobs_by_group_and_freq = df.groupby(by=('group', 'freq'))['numobs']
+    # Report average number of observations for each frequency and genotype
+    numobs_by_group_and_freq = df.groupby(by=('genotype', 'freq'))['numobs']
     print(numobs_by_group_and_freq.mean())
 
-    by_group_and_freq = df[['group', 'freq', 'fly', 'wba', 'wba_t']].groupby(('group', 'freq'))
-    # print by_group_and_freq.describe()
-    for (group, freq), data in by_group_and_freq:  # for each of these, we need to build a model
-                                                   # we can even add an upper level to shrink to a "common" fly
-        print(group, freq)    # genotype, perturbation frequency
-        for index, row in data.iterrows():
-            print(index)      # this is meaningless, as it is just the row number before grouping
-            print(row['fly'])    # fly id
-            print(row['wba_t'])  # times for the measuments
-            print(row['wba'])    # R-L
-            # print(row.ga)     # ground angle
+    for (group, freq), data in df.groupby(('genotype', 'freq')):
+        for _, row in data.iterrows():
+            print('fly %s (genotype %s) has %d observations for frequency %g' %
+                  (row['flyid'], row['genotype'], len(row['wba']), row['freq']))
