@@ -65,7 +65,7 @@ def sanity_checks(data, min_num_obs=10, min_num_flies=2):
 #     For provenance tracking purposes, I also recommend really copying and pasting
 #     (as opposed to retrieving by calling an existing factory and slightly modifying it)
 #
-#   - add it to the dictionary "MODEL_FACTORIES
+#   - add it to the dictionary "MODEL_FACTORIES"
 #
 #############################
 
@@ -77,7 +77,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10):
       group hyperpriors on phase and amplitude
         amplitude ~ HalfCauchy(alpha_group, beta_group)
         phase ~ VonMises(mu_group, kappa_group)
-      an stochastic (with strong prior) too for omega
+      an stochastic (with strong prior) for omega
 
     Parameters
     ----------
@@ -170,7 +170,7 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10):
         amplitude ~ HalfCauchy(alpha_group, beta_group)
         phase ~ VonMises(mu_group, kappa_group)
       slice sampling for the group hyperpriors
-      an stochastic (with strong prior) too for omega
+      an stochastic (with strong prior) for omega
     """
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
@@ -353,7 +353,6 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10):
         perturbation_freq = fly['freq']
         time = fly['wba_t']
         signal = fly['wba']
-        max_amplitude = np.max(np.abs(signal))
         flyid = 'fly=%s' % str(fly['flyid'])
 
         #--- priors
