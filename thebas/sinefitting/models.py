@@ -70,7 +70,7 @@ def sanity_checks(data, min_num_obs=10, min_num_flies=2):
 #############################
 
 
-def gpa_t1(group_id, group_data, min_num_obs=10):
+def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-4):
     """Group phase and group amplitude, model t1.
 
     Model highlights (details on the function body):
@@ -106,12 +106,12 @@ def gpa_t1(group_id, group_data, min_num_obs=10):
     #--- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
-    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=1E-6, upper=10)
+    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=5.)
-    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=1E-6, upper=10.)
+    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
       # should probably use a stronger prior
 
     #--- each individual fly...
@@ -138,7 +138,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10):
         # frequency narrowly distributed around the frequency of the perturbation
         freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=10.)
         # uninformative noise for the Normal likelihood
-        sigma = pymc.Uniform('sigma_' + flyid, 1E-9, 10.)
+        sigma = pymc.Uniform('sigma_' + flyid, SMALL, 10.)
 
         # the modeled signal generation process
         @pymc.deterministic(plot=False, name='modeledSignal_' + flyid)
@@ -162,7 +162,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10):
     return model, {}
 
 
-def gpa_t1_slice(group_id, group_data, min_num_obs=10):
+def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-4):
     """Group phase and group amplitude, model t1.
 
     Model highlights (details on the function body):
@@ -178,12 +178,12 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10):
     #--- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
-    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=1E-6, upper=10)
+    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=5.)
-    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=1E-6, upper=10.)
+    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
       # should probably use a stronger prior
 
     #--- each individual fly...
@@ -210,7 +210,7 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10):
         # frequency narrowly distributed around the frequency of the perturbation
         freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=100.)
         # uninformative noise for the Normal likelihood
-        sigma = pymc.Uniform('sigma_' + flyid, 1E-9, 10.)
+        sigma = pymc.Uniform('sigma_' + flyid, SMALL, 10.)
 
         # the modeled signal generation process
         @pymc.deterministic(plot=False, name='modeledSignal_' + flyid)
@@ -239,7 +239,7 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10):
                                     (group_amplitude_beta, pymc.Slicer, {})]}  # N.B. Slicer requires pymc >=2.3.2
 
 
-def gpa_t2_slice(group_id, group_data, min_num_obs=10):
+def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-4):
     """Group phase and group amplitude, model t2.
 
     Model highlights (details on the function body):
@@ -255,12 +255,12 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10):
     #--- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
-    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=1E-6, upper=10)
+    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=5.)
-    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=1E-6, upper=10.)
+    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
       # should probably use a stronger prior
 
     #--- each individual fly...
@@ -320,7 +320,7 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10):
                                     (group_amplitude_beta, pymc.Slicer, {})]}  # N.B. Slicer requires pymc >=2.3.2
 
 
-def gpad_t1_slice(group_id, group_data, min_num_obs=10):
+def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-4):
     """Group phase, group amplitude, group DC model t1.
 
     Model highlights (details on the function body):
@@ -337,15 +337,15 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10):
     #--- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
-    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=1E-6, upper=10)
+    group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=5.)
-    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=1E-6, upper=10.)
+    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
     # group DC - uninformative priors and no data-initialised
     group_dc_mu = pymc.Normal('dcMu_' + group_id, mu=0, tau=10)
-    group_dc_std = pymc.Uniform('dcStd_' + group_id, lower=1E-6, upper=10)
+    group_dc_std = pymc.Uniform('dcStd_' + group_id, lower=SMALL, upper=100)
 
     #--- each individual fly...
     def fly_model(fly):
@@ -370,7 +370,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10):
         # frequency narrowly distributed around the frequency of the perturbation
         freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=100.)
         # uninformative noise for the Normal likelihood
-        sigma = pymc.Uniform('sigma_' + flyid, 1E-9, 10.)
+        sigma = pymc.Uniform('sigma_' + flyid, SMALL, 10.)
 
         # the modeled signal generation process
         @pymc.deterministic(plot=False, name='modeledSignal_' + flyid)
