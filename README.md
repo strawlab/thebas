@@ -34,7 +34,7 @@ PYTHONPATH=$PYTHONPATH:. /opt/anaconda/bin/python thebas/sinefitting/samplers.py
 cat commands | parallel -j12
 
 # Let's toy-fit one model, 4 chains, only 800 iterations...
-PYTHONPATH=$PYTHONPATH:. /opt/anaconda/bin/python -u thebas/sinefitting/samplers.py sample --freq 40 --genotype-id VT37804_TNTE --mol-id gpa3nomap --iters 800 --burn 400 &>~/gpa3nomap__VT37804_TNTE__40.log
+PYTHONPATH=$PYTHONPATH:. /opt/anaconda/bin/python -u thebas/sinefitting/samplers.py sample --freq 40 --genotype-id VT37804_TNTE --model-id gpa3nomap --iters 800 --burn 400 &>~/gpa3nomap__VT37804_TNTE__40.log
 # To add new models, just edit thebas/sinefitting/models (warning loads of copy and paste there!)
 # Copy a model to modify and add it at the end to the dictionary "MODEL_FACTORIES"
 

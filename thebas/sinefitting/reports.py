@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from thebas.misc import ensure_dir
 from thebas.sinefitting import DEFAULT_MCMC_RESULTS_DIR, DEFAULT_PLOTS_DIR
 from thebas.sinefitting.models import perturbation_signal
-from thebas.sinefitting.perturbation_experiment import all_biases, perturbation_data_to_records
+from thebas.sinefitting.perturbation_experiment_data import all_biases, perturbation_data_to_records
 from thebas.sinefitting.results import MCMCRunManager
 
 

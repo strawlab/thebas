@@ -1,5 +1,7 @@
 # coding=utf-8
 """Results storage, postprocessing and summaries."""
+from glob import glob
+import os
 import os.path as op
 from pprint import pprint
 import weakref
@@ -9,13 +11,15 @@ import joblib
 import pymc
 from pymc.Matplot import plot, summary_plot
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
 from thebas.misc import ensure_dir
+from thebas.sinefitting.perturbation_experiment_data import save_perturbation_record_data_to_hdf5, \
+    load_perturbation_record_data_from_hdf5
 
 
 class MCMCRunManager(object):
     """Manages a single MCMC result in disk."""
+
     def __init__(self, root_dir, name=None, backend='pickle'):
         super(MCMCRunManager, self).__init__()
 
@@ -47,7 +51,7 @@ class MCMCRunManager(object):
 
         # Data storage - only if we really want to keep provenance clear
         self.data_dir = ensure_dir(op.join(self.root_dir, 'data'))
-        self.data_pickle = op.join(self.data_dir, 'data.pickle')
+        self.data_file = op.join(self.data_dir, 'data.pickle')
 
         # Done file
         self.done_file = op.join(self.root_dir, 'DONE')
@@ -66,12 +70,12 @@ class MCMCRunManager(object):
         except:
             return None
 
-    def save_data(self, data):
-        data.to_pickle(self.data_pickle)
+    def save_data(self, data, overwrite=True):
+        save_perturbation_record_data_to_hdf5(data, self.data_file, overwrite=overwrite)
 
     def load_data(self):
         try:
-            return pd.read_pickle(self.data_pickle)
+            return load_perturbation_record_data_from_hdf5(self.data_file)
         except:
             return None
 
@@ -95,7 +99,7 @@ class MCMCRunManager(object):
 
     def traces(self, varname):
         """Returns a numpy array with the traces for the variable, one squeezed row per chain."""
-        # TODO: Q&D to eliminate delays on reading, rethink
+        # TODO: Q&D to eliminate delays on reading, rethink...
         cache_file = op.join(self.db_dir, '%s.%s' % (varname, 'pickle'))
         if not op.isfile(cache_file):
             # We could instead combine all the chains into a long one with chain=None
@@ -123,11 +127,31 @@ class MCMCRunManager(object):
     def num_chains(self):
         return len(self.varnames())
 
-    def run_sampler(self, model,
-                    iters=80000, burn=20000, num_chains=4,
-                    force=False,
-                    doplot=True, showplots=False, progress_bar=False,
-                    mapstart=False):
+    def group_plots_in_dirs(self):
+        def ensure_symlink(dest_dir, file_name, plot_file):
+            dest_file = op.join(dest_dir, file_name)
+            if not op.islink(dest_file):
+                ensure_dir(dest_dir)
+                os.symlink(plot_file, dest_file)
+        for plot_file in glob(op.join(self.plots_dir, '*.png')):
+            file_name = op.basename(plot_file)
+            if 'group=' in file_name:
+                ensure_symlink(op.join(self.plots_dir, 'posteriors-group'), file_name, plot_file)
+                # Assume only one group per model ATM
+            elif 'summary__' in file_name:
+                ensure_symlink(op.join(self.plots_dir, 'summaries'), file_name, plot_file)
+            elif 'fly=':
+                fly_name = file_name.partition('fly=')[2].partition('_')[0]
+                ensure_symlink(op.join(self.plots_dir, 'posteriors-fly=%s' % fly_name), file_name, plot_file)
+
+    def sample(self,
+               model,
+               mapstart=False,
+               step_methods=None,
+               iters=80000, burn=20000, num_chains=4,
+               doplot=True, showplots=False,
+               force=False,
+               progress_bar=False):
 
         print('MCMC for %s' % self.name)
 
@@ -136,7 +160,7 @@ class MCMCRunManager(object):
                 print('\tAlready done, skipping...')
                 return self.db_file
             else:
-                print('\tWARNING: recomputing, there might be spurious files from previous runs...')
+                print('\tWARNING: recomputing, there might be spurious files from previous runs...')  # Not a good idea
         # Let's graph the model
         graph = pymc.graph.dag(pymc.Model(model),
                                name=self.name,
@@ -158,16 +182,24 @@ class MCMCRunManager(object):
             except Exception, e:
                 print('\tMAP Failed...', str(e))
 
+        # Instantiate model
         M = pymc.MCMC(model, db=self.backend, dbname=self.db_file, name=self.name)
 
+        # Tune step methods
+        if step_methods is not None:
+            for var, step_method, sm_kwargs in step_methods:
+                M.use_step_method(step_method, var, **sm_kwargs)
+
+        # Sample!
         for chain in xrange(num_chains):
             print('\tChain %d of %d' % (chain + 1, num_chains))
             M.sample(iter=iters, burn=burn, progress_bar=progress_bar)
             try:
                 if doplot:  # Summaries for the chain
                     plot(M, suffix='__' + self.name + '__chain=%d' % chain, path=self.plots_dir, verbose=0)
-                    summary_plot(M, name='summary' + self.name + '__chain=%d' % chain, path=self.plots_dir + '/')
+                    summary_plot(M, name='summary__' + self.name + '__chain=%d' % chain, path=self.plots_dir + '/')
                     # TODO: report no op.join (+'/') bug to pymc people
+                    self.group_plots_in_dirs()
                 if showplots:
                     plt.show()
                 chain_stats = M.stats(chain=chain)
@@ -183,11 +215,11 @@ class MCMCRunManager(object):
         return self.db_file
 
 #
+#
+# TODO: MCMCRunMAnager should just contain all from model spec to sampling details
+#       do in the next developing iteration
+#
 # TODO: look at hdf5ea backend if we were to get traces of big data vectors
-#
-# TODO: disable pytables naturalnamewarning
-# https://www.mail-archive.com/pytables-users@lists.sourceforge.net/msg01130.html
-#
 # TODO: all the database backends in pymc are disappointing:
 #   - pickle is pickle (all in memory, slow, and pickled serialization has the usual mantainability problems)
 #   - sqlite and text are oververbose
@@ -197,6 +229,8 @@ class MCMCRunManager(object):
 #  In the meantime, we can just use pickle (we could monkeypatch to use joblib).
 #  We then cache traces using joblib when requested.
 #  Writing an efficient backend just using plain datafiles should be simple.
+# TODO: disable pytables naturalnamewarning
+# https://www.mail-archive.com/pytables-users@lists.sourceforge.net/msg01130.html
 #
 # TODO: easily restart chains (instead of sampling new chains)
 #

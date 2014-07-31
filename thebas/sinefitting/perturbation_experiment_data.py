@@ -3,9 +3,11 @@
 
 THE method you probably want to use is this (at the end of the file):
   perturbation_data_to_records
+Look at the documentation to understand how to access the data.
 "main" (at the end of the file) shows some examples
 """
 from glob import glob
+import os
 import os.path as op
 
 import h5py
@@ -16,15 +18,8 @@ from pandas import DataFrame
 from thebas.externals.tethered_data.misc import rostimearr2datetimeidx
 from thebas.externals.tethered_data.strokelitude import Strokelitude, filter_signals_gaussian, filter_signals_lowpass, \
     detect_noflight, remove_noflight
-
-
-PERTURBATION_BIAS_DATA_ROOT = op.join(op.expanduser('~'), 'data-analysis', 'closed_loop_perturbations', 'data')
-if not op.isdir(PERTURBATION_BIAS_DATA_ROOT):
-    PERTURBATION_BIAS_DATA_ROOT = '/mnt/strawscience/santi/dcn-tethered-bayesian/data'
-PERTURBATION_BIAS_SILENCED_FLIES = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTE')
-PERTURBATION_BIAS_KINDAWT_FLIES = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTin')
-TEST_HDF5 = op.join(PERTURBATION_BIAS_DATA_ROOT, 'VT37804_TNTE', '2012-12-18-16-04-06.hdf5')
-
+from thebas.sinefitting import PERTURBATION_BIAS_SILENCED_FLIES, PERTURBATION_BIAS_KINDAWT_FLIES, \
+    PERTURBATION_BIAS_DATA_ROOT, TEST_HDF5
 
 ####################################
 # Convenient access to the data as provided by strokelitude
@@ -206,7 +201,12 @@ def print_data_sizes_summary(data=None):
 
 #---- library independent HDF5 format (to forget about pickles / pytables and anything less standard/durable)
 
-def _save_record_data_to_hdf5(data, hdf_file):
+def save_perturbation_record_data_to_hdf5(data, hdf_file, overwrite=False):
+    if op.isfile(hdf_file):
+        if overwrite:
+            os.unlink(hdf_file)
+        else:
+            raise Exception('%s already exists and overwrite is False' % hdf_file)
     with h5py.File(hdf_file, 'w-') as h5:
         for _, row in data.iterrows():
             exp = h5.require_group(row['flyid'])
@@ -222,7 +222,7 @@ def _save_record_data_to_hdf5(data, hdf_file):
             freq.attrs['numobs'] = row['numobs']
 
 
-def _load_record_data_from_hdf5(hdf_file=op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5')):
+def load_perturbation_record_data_from_hdf5(hdf_file):
     all_records = []
     with h5py.File(hdf_file, 'r') as h5:
         for flyid, flydata in h5.iteritems():
@@ -280,7 +280,7 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
 
     # Return cached data
     if op.isfile(CACHE_FILE) and not overwrite_cached:
-        return _load_record_data_from_hdf5(CACHE_FILE)
+        return load_perturbation_record_data_from_hdf5(CACHE_FILE)
 
     # Remunge
     if data is None:
@@ -300,7 +300,7 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
     df['numobs'] = df.apply(lambda row: len(row['wba']), axis=1)
 
     # Cache
-    _save_record_data_to_hdf5(df, CACHE_FILE)
+    save_perturbation_record_data_to_hdf5(df, CACHE_FILE)
 
     return df
 
