@@ -53,7 +53,7 @@ def sample(root_dir=None,
                   **sample_params)
 
 
-def cl(MODELS=('gpa_t1', 'gpa_t1_slice', 'gpa_t2_slice', 'gpad_t1_slice'),
+def cl(MODELS=('gpa3', 'gpa_t1', 'gpa_t1_slice', 'gpa_t2_slice', 'gpad_t1_slice'),
        GROUPS=('VT37804_TNTE', 'VT37804_TNTin'),   # DCD-silenced, control)
        FREQS=(.5, 1., 2., 4., 8., 16., 32., 40.),  # angular frequencies (rad/s)
        log_dir='~'):

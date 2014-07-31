@@ -277,10 +277,14 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
     """
     CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5') if remove_silences else \
         op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.h5')
+    # CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.pickle') if remove_silences else \
+    #     op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.pickle')
 
     # Return cached data
     if op.isfile(CACHE_FILE) and not overwrite_cached:
         return load_perturbation_record_data_from_hdf5(CACHE_FILE)
+    # if op.isfile(CACHE_FILE) and not overwrite_cached:
+    #     return pd.read_pickle(CACHE_FILE)
 
     # Remunge
     if data is None:
@@ -301,6 +305,7 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
 
     # Cache
     save_perturbation_record_data_to_hdf5(df, CACHE_FILE)
+    # df.to_pickle(CACHE_FILE)
 
     return df
 
