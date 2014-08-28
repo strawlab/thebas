@@ -14,6 +14,8 @@ import h5py
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
+from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_series_equal
 
 from thebas.externals.tethered_data.misc import rostimearr2datetimeidx
 from thebas.externals.tethered_data.strokelitude import Strokelitude, filter_signals_gaussian, filter_signals_lowpass, \
@@ -245,7 +247,11 @@ def load_perturbation_record_data_from_hdf5(hdf_file):
                                                    'ideal_start', 'ideal_stop', 'ideal_numobs', 'numobs'))
 
 
-def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, remove_silences=True):
+def perturbation_data_to_records(data=None,
+                                 dt=0.01,
+                                 cache_to_pickle=False,
+                                 overwrite_cached=False,
+                                 remove_silences=True):
     """Reads the perturbation experiment data into a pandas dataset, in records with the following columns:
        - flyid: the id of the fly
        - genotype: the genotype of the fly
@@ -266,6 +272,8 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
       groups data as returned by "all_perturbations_data", which is the default if data is None
     dt: float, default 0.01
       the sampling period (note that the "ideal" sampling rate was 100Hz)
+    cache_to_pickle: boolean, default True
+      if True, data will be stored as a pickled dataframe, else it will be stored in a simple hdf5 file
     overwrite_cached: boolean, default False
       if True, a possibly existent cache is overwritten
     remove_silences: boolean, default True
@@ -274,17 +282,50 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
     Returns
     -------
     That pandas dataframe
+
+    Examples
+    --------
+    >>> data = perturbation_data_to_records()
+    >>> print 'There are %d records (%d flyids x 8 frequencies)' % (len(data), data['flyid'].nunique())
+    There are 208 records (26 flyids x 8 frequencies)
+    >>> print 'There are %d control records' % np.sum(data['genotype'] == 'VT37804_TNTE')
+    There are 112 control records
+    >>> print 'There are %d DCN-blocked records' % np.sum(data['genotype'] == 'VT37804_TNTin')
+    There are 96 DCN-blocked records
+    >>> data2 = perturbation_data_to_records(cache_to_pickle=True)
+    >>> len(data) == len(data2)
+    True
+    >>> set(data.columns) == set(data2.columns)
+    True
+    >>> row1 = data[(data['flyid'] == '2012-12-18-13-46-42') & (data['freq'] == 8.)]
+    >>> row2 = data2[(data2['flyid'] == '2012-12-18-13-46-42') & (data2['freq'] == 8.)]
+    >>> len(row1)
+    1
+    >>> len(row2)
+    1
+    >>> row1 = row1.iloc[0]  # Extract the series
+    >>> row2 = row2.iloc[0]
+    >>> np.allclose(row1['wba_t'], row2['wba_t'])
+    True
+    >>> np.allclose(row1['wba'], row2['wba'])
+    True
+    >>> np.allclose(row1['ga'], row2['ga'])
+    True
     """
-    CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5') if remove_silences else \
-        op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.h5')
-    # CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.pickle') if remove_silences else \
-    #     op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.pickle')
+    if cache_to_pickle:
+        CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.pickle') \
+            if remove_silences else \
+            op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.pickle')
+    else:
+        CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5') \
+            if remove_silences else \
+            op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.h5')
 
     # Return cached data
     if op.isfile(CACHE_FILE) and not overwrite_cached:
+        if cache_to_pickle:
+            return pd.read_pickle(CACHE_FILE)
         return load_perturbation_record_data_from_hdf5(CACHE_FILE)
-    # if op.isfile(CACHE_FILE) and not overwrite_cached:
-    #     return pd.read_pickle(CACHE_FILE)
 
     # Remunge
     if data is None:
@@ -303,9 +344,23 @@ def perturbation_data_to_records(data=None, dt=0.01, overwrite_cached=False, rem
     df['ideal_numobs'] = (df.ideal_stop - df.ideal_start) / dt
     df['numobs'] = df.apply(lambda row: len(row['wba']), axis=1)
 
+    # Explicitly state columns order - workaround of a strange pandas pickling bug
+    df = df[[u'flyid',
+             u'genotype',
+             u'freq',
+             u'wba_t',
+             u'wba',
+             u'ga',
+             u'ideal_start',
+             u'ideal_stop',
+             u'ideal_numobs',
+             u'numobs']]
+
     # Cache
-    save_perturbation_record_data_to_hdf5(df, CACHE_FILE)
-    # df.to_pickle(CACHE_FILE)
+    if cache_to_pickle:
+        df.to_pickle(CACHE_FILE)
+    else:
+        save_perturbation_record_data_to_hdf5(df, CACHE_FILE)
 
     return df
 
