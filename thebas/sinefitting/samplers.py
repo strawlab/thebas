@@ -2,9 +2,11 @@
 import os.path as op
 from itertools import product
 import inspect
+
+import numpy as np
+
 from thebas.sinefitting import DEFAULT_MCMC_RESULTS_DIR
-from thebas.sinefitting.models import MODEL_FACTORIES
-from thebas.sinefitting.perturbation_experiment_data import perturbation_data_to_records
+from thebas.sinefitting.models import instantiate_model
 from thebas.sinefitting.results import MCMCRunManager
 
 
@@ -12,6 +14,7 @@ def sample(root_dir=None,
            freq=2.,
            genotype_id='VT37804_TNTE',
            model_id='gpa_t1',
+           seed=0,
            num_chains=4,  # used via "eval"
            iters=80000,   # used via "eval"
            burn=60000,    # used via "eval"
@@ -19,22 +22,16 @@ def sample(root_dir=None,
 
     print('Using model %s for genotype %s, frequency %g' % (model_id, genotype_id, freq))
 
-    # Pick the specified model
-    if not model_id in MODEL_FACTORIES:
-        raise Exception('Do not know a model with id %s' % model_id)
-    model_factory = MODEL_FACTORIES[model_id]
-
-    # Read and select the data
-    group_id = 'freq=%g__genotype=%s' % (freq, genotype_id)
-    group_data = perturbation_data_to_records()
-    group_data = group_data[(group_data['freq'] == freq) &  # select the group data
-                            (group_data['genotype'] == genotype_id)]
+    # Control rng pymc uses numpy global rng
+    if seed is not None:
+        np.random.seed(seed)
 
     # Instantiate the model
-    model, sample_params = model_factory(group_id, group_data)
+    group_id, group_data, model_factory, model, sample_params = \
+        instantiate_model(freq=freq, genotype=genotype_id, model_id=model_id)
 
     # Run-id and dest dir
-    name = 'model=%s__%s' % (model_id, group_id)
+    name = 'model=%s__%s__seed=%r' % (model_id, group_id, seed)
     root_dir = op.join(DEFAULT_MCMC_RESULTS_DIR, name) if root_dir is None else op.join(root_dir, name)
 
     # Instantiate the result manager

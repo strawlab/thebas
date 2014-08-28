@@ -6,7 +6,7 @@ import pymc
 
 def perturbation_signal(times, amplitude=5., phase=0., mean_val=0., freq=0.5, freq_is_angular=True):
     """Computes the perturbation signal for certain parameters.
-    In Lisa'soriginal experiments, the perturbation signal stimuli was a sinewave using
+    In Lisa's original experiments, the perturbation signal stimuli was a sinewave using
     the default parameters of this function (but for frequency).
     """
     if freq_is_angular:
@@ -121,10 +121,10 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
-    # group_amplitude_alpha = pymc.Normal('amplitudeAlpha_' + group_id,
-    #                                     value=mean_group_amplitude,
-    #                                     mu=mean_group_amplitude,
-    #                                     tau=1/100.)
+    group_amplitude_alpha = pymc.Normal('amplitudeAlpha_' + group_id,
+                                        value=mean_group_amplitude,
+                                        mu=mean_group_amplitude,
+                                        tau=1/100.)
     # group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id,
     #                                     value=25,
     #                                     lower=0,
@@ -148,14 +148,18 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                   kappa=group_phase_kappa)
         # amplitude ~ HalfCauchy(group_amplitude_alpha, group_amplitude_beta)
         amplitude = pymc.HalfCauchy('amplitude_' + flyid,
-                                    value=mean_group_amplitude,
-                                    alpha=mean_group_amplitude,
+                                    # value=mean_group_amplitude,
+                                    # alpha=mean_group_amplitude,
+                                    # beta=25
+                                    alpha=group_amplitude_alpha,
+                                    # beta=group_amplitude_beta)
                                     beta=25)
         # uninformative DC
         mean_val = pymc.Uniform('DC_' + flyid, -max_amplitude, max_amplitude)
         # frequency narrowly distributed around the frequency of the perturbation
-        freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=10.)
-        # uninformative noise for the Normal likelihood
+        # freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=10.)
+        freq = perturbation_freq
+        # uninformative sd for the Normal likelihood
         sigma = pymc.Uniform('sigma_' + flyid, SMALL, 10.)
 
         # the modeled signal generation process
@@ -167,14 +171,17 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                        mean_val=mean_val,
                                        freq=freq)
 
-        #--- likelihood
+        #--- likelihood (each observation is modeled as a Gaussian, all share their sd)
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
         #--- fly model
-        return [y, phase, amplitude, freq, mean_val, sigma]
+        return [y, phase, amplitude, mean_val, sigma]  # freq,
 
     #--- put all together
-    model = [group_phase_mu, group_phase_kappa]  # , group_amplitude_beta , group_amplitude_alpha
+    # model = [group_phase_mu, group_phase_kappa]  # weird: this seems to work
+    # model = [group_phase_mu, group_phase_kappa, group_amplitude_beta, group_amplitude_alpha]
+    model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha]
+      # weird: this seems not to work (but we are still sampling)
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
     return model, {}
@@ -486,6 +493,51 @@ MODEL_FACTORIES = {model.__name__: model for model in [
     gpad_t1_slice,
     gpa3,
 ]}
+
+
+def instantiate_model(freq=2.,
+                      genotype='VT37804_TNTE',
+                      model_id='gpa_t1'):
+    """
+    Instantiates a model for the given data coordinates,
+
+    Parameters
+    ----------
+    freq : float, default 2
+      The frequency of the perturbation
+
+    genotype_id:
+      The genotype of the flies
+
+    model_id:
+      A model id (from MODEL_FACTORIES)
+
+    Returns
+    -------
+    group_id (a string identifying the data group), group_data (the data for the group),
+    model_factory (the function that instantiates the model), model (the instantiated model),
+    sample_params (a dictionary param_name -> param_value to configure the sampler).
+    """
+
+    # We will need to access the data
+    from thebas.sinefitting.perturbation_experiment_data import perturbation_data_to_records
+
+    # Pick the specified model
+    if not model_id in MODEL_FACTORIES:
+        raise Exception('Do not know a model with id %s' % model_id)
+    model_factory = MODEL_FACTORIES[model_id]
+
+    # Read and select the data
+    group_id = 'freq=%g__genotype=%s' % (freq, genotype)
+    group_data = perturbation_data_to_records()
+    group_data = group_data[(group_data['freq'] == freq) &  # select the group data
+                            (group_data['genotype'] == genotype)]
+
+    # Instantiate the model
+    model, sample_params = model_factory(group_id, group_data)
+
+    return group_id, group_data, model_factory, model, sample_params
+
 
 
 ###############################################
