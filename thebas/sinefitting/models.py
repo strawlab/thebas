@@ -484,7 +484,7 @@ MODEL_FACTORIES = {model.__name__: model for model in [
     gpa_t1_slice,
     gpa_t2_slice,
     gpad_t1_slice,
-    gpa3
+    gpa3,
 ]}
 
 

@@ -32,7 +32,7 @@ class TetheredSinewaveData(object):
         self.h5 = h5file
 
     def bias(self):
-        """Returns the bias info (essentially the sinewave over time.) as 1D numpy arrays.
+        """Returns the bias info (essentially the sinewave over time) as 1D numpy arrays.
         It gives 4 arrays: amplitude, the time in seconds and nanoseconds and the sum of the two times.
 
         These are virtual-reality-controler measurements (higher frequency)
