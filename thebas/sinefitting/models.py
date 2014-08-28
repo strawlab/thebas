@@ -593,3 +593,9 @@ def instantiate_model(freq=2.,
 #        so that provenance has just one place...
 #
 ###############################################
+#
+# TODO: implement sine-wave pdfs
+#   http://books.google.ie/books?id=kKf9PmmazzMC&pg=PA61&lpg=PA61&dq=probability+density+function+for+sine+wave&source=bl&ots=Ifv09awVE0&sig=8lY76M9iDN86n3jJxcYXLF5wfXk&hl=en&sa=X&ei=mOT-U-7jKNLOaLukgNAP&sqi=2&ved=0CCYQ6AEwAQ#v=onepage&q=probability%20density%20function%20for%20sine%20wave&f=false
+#   http://atif-razzaq.blogspot.co.at/2011/02/probability-density-function-pdf-of.html
+#
+###############################################
