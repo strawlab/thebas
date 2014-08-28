@@ -125,10 +125,10 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                         value=mean_group_amplitude,
                                         mu=mean_group_amplitude,
                                         tau=1/100.)
-    # group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id,
-    #                                     value=25,
-    #                                     lower=0,
-    #                                     upper=50.)
+    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id,
+                                        value=25,
+                                        lower=1.,
+                                        upper=50.)
       # should probably use a stronger prior
 
     #--- each individual fly...
@@ -179,8 +179,8 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
 
     #--- put all together
     # model = [group_phase_mu, group_phase_kappa]  # weird: this seems to work
-    # model = [group_phase_mu, group_phase_kappa, group_amplitude_beta, group_amplitude_alpha]
-    model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha]
+    model = [group_phase_mu, group_phase_kappa, group_amplitude_beta, group_amplitude_alpha]
+    # model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha]
       # weird: this seems not to work (but we are still sampling)
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
@@ -444,7 +444,7 @@ def gpa3(group_id, group_data, min_num_obs=10):
     group_phase = pymc.CircVonMises('phase_' + group_id, group_phase_mu, group_phase_kappa)
     # group amplitude
     max_amplitude = np.max([np.max(np.abs(fly.wba)) for _, fly in group_data.iterrows()])
-    group_amplitude = pymc.Uniform('amplitude_' + group_id, lower=0, upper=max_amplitude)
+    group_amplitude = pymc.Uniform('amplitude_' + group_id, lower=1E-6, upper=max_amplitude)
                                                                      # just max_amplitude is not ok
 
     def fly_model(fly):
