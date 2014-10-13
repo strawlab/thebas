@@ -562,7 +562,6 @@ def bodelike_plot(model_id='gpa3',
     if show:
         plt.show()
 
-
 def failsafe_plot(model, var, fignum=0, show=False):
     if var == 'amplitude' and 'gpa' not in model:
         return
@@ -573,6 +572,12 @@ def failsafe_plot(model, var, fignum=0, show=False):
         plt.close(fignum)
     except Exception, e:
         print '\tFailed: %s' % str(e)
+
+# gpa_t1 & family hyperpriors: amplitudeAlpha, amplitubeBeta phaseKappa, phaseMu
+# bodelike_plot(model_id='gpa_t1', varname='amplitudeAlpha')
+# bodelike_plot(model_id='gpa_t1', varname='amplitudeBeta')
+# bodelike_plot(model_id='gpa_t1', varname='phaseKappa')
+# bodelike_plot(model_id='gpa_t1', varname='phaseMu')
 
 # # models = ('gpa1', 'gpa2', 'gpa3', 'gpa3nomap', 'gpa4', 'gp1', 'gp2')
 # models = ('gp1', 'gpa3', 'gpa3nomap')
