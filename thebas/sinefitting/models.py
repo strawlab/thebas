@@ -138,15 +138,15 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         amplitude = pymc.HalfCauchy('amplitude_' + flyid,
                                     # value=mean_group_amplitude,
                                     # alpha=mean_group_amplitude,
-                                    # beta=25
+                                    # beta=25  # beta=25 is a common choice
                                     alpha=group_amplitude_alpha,
                                     beta=group_amplitude_beta)
 
         # uninformative DC
         mean_val = pymc.Uniform('DC_' + flyid, -max_amplitude, max_amplitude)
         # frequency narrowly distributed around the frequency of the perturbation
-        # freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=10.)
-        freq = perturbation_freq
+        freq = pymc.Normal('freq_' + flyid, mu=perturbation_freq, tau=100.)
+        # freq = perturbation_freq
         # uninformative sd for the Normal likelihood
         sigma = pymc.Uniform('sigma_' + flyid, SMALL, 10.)
 
@@ -195,8 +195,16 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
     mean_group_amplitude = np.mean([np.max(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
-    group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=10.)
-    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
+    group_amplitude_alpha = pymc.Normal('amplitudeAlpha_' + group_id,
+                                        value=mean_group_amplitude,
+                                        mu=mean_group_amplitude,
+                                        tau=1/100.)
+    group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id,
+                                    value=25,
+                                    lower=1.,
+                                    upper=50.)  # should probably use a stronger prior
+    # group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=25.)
+    # group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
 
     # --- each individual fly...
     def fly_model(fly):
@@ -259,7 +267,7 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         amplitude ~ HalfCauchy(alpha_group, beta_group)
         phase ~ VonMises(mu_group, kappa_group)
       slice sampling for the group hyperpriors
-      omega is fixed
+      an stochastic (with strong prior) for omega
     """
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
@@ -341,7 +349,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         phase ~ VonMises(mu_group, kappa_group)
         DC ~ Normal(mu_group, tau_group)
       slice sampling for the group hyperpriors
-      omega is fixed
+      an stochastic (with strong prior) for omega
     """
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
