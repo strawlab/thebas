@@ -125,7 +125,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
-    mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
+    mean_group_amplitude = np.mean([np.max(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.Normal('amplitudeAlpha_' + group_id,
                                         value=mean_group_amplitude,
                                         mu=mean_group_amplitude,
@@ -210,7 +210,7 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
-    mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
+    mean_group_amplitude = np.mean([np.max(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=10.)
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
 
@@ -286,7 +286,7 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
-    mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
+    mean_group_amplitude = np.mean([np.max(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=10.)
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
     # should probably use a stronger prior
@@ -368,7 +368,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=1.)
     # group amplitude - parameters for Half Cauchy
-    mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
+    mean_group_amplitude = np.mean([np.max(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=10.)
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=1000.)
     # group DC - uninformative priors and no data-initialised
