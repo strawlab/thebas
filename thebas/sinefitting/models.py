@@ -168,7 +168,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     # --- put all together
     # model = [group_phase_mu, group_phase_kappa]  # weird: this seems to work
     # model = [group_phase_mu, group_phase_kappa, group_amplitude_beta, group_amplitude_alpha]
-    model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha]
+    model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha, group_amplitude_beta]
     # weird: this seems not to work (but we are still sampling)
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
