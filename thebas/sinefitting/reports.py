@@ -564,7 +564,7 @@ def bodelike_plot(model_id='gpa3',
 
 
 def failsafe_plot(model, var, fignum=0, show=False):
-    if var == 'amplitude' and not 'gpa' in model:
+    if var == 'amplitude' and 'gpa' not in model:
         return
     print model, var
     try:
