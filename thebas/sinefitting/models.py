@@ -100,22 +100,6 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
 
     """
 
-    # DONE
-    # DONE As soon as we add a group hyperprior to the HalfCauchy amplitudes,
-    # DONE (or in general a non-negative group hyperprior to any amplitude prior)
-    # DONE we get ZeroProb exceptions for some flies
-    # DONE (similar to what was happening before with the other non-negative distros I was trying...)
-    # DONE   - maybe we need to clean the data
-    # DONE   - maybe we need to allow negative amplitudes
-    # DONE   - maybe the models are still not sensible
-    # DONE   - ...
-    # DONE
-    # Seems related to this regression in pymc 2.3.3 (the one provided in stock anaconda at the moment)
-    #   https://github.com/pymc-devs/pymc/issues/588
-    #   https://github.com/pymc-devs/pymc/issues/589
-    # Compiling from master seems to fix this weeks-taking annoyance (running right now)
-    #
-
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
@@ -599,5 +583,22 @@ def instantiate_model(freq=2.,
 # TODO: implement sine-wave pdfs
 #   http://books.google.ie/books?id=kKf9PmmazzMC&pg=PA61&lpg=PA61&dq=probability+density+function+for+sine+wave&source=bl&ots=Ifv09awVE0&sig=8lY76M9iDN86n3jJxcYXLF5wfXk&hl=en&sa=X&ei=mOT-U-7jKNLOaLukgNAP&sqi=2&ved=0CCYQ6AEwAQ#v=onepage&q=probability%20density%20function%20for%20sine%20wave&f=false
 #   http://atif-razzaq.blogspot.co.at/2011/02/probability-density-function-pdf-of.html
+#
+###############################################
+#
+# DONE
+# DONE As soon as we add a group hyperprior to the HalfCauchy amplitudes,
+# DONE (or in general a non-negative group hyperprior to any amplitude prior)
+# DONE we get ZeroProb exceptions for some flies
+# DONE (similar to what was happening before with the other non-negative distros I was trying...)
+# DONE   - maybe we need to clean the data
+# DONE   - maybe we need to allow negative amplitudes
+# DONE   - maybe the models are still not sensible
+# DONE   - ...
+# DONE
+# Seems related to this regression in pymc 2.3.3 (the one provided in stock anaconda at the moment)
+#   https://github.com/pymc-devs/pymc/issues/588
+#   https://github.com/pymc-devs/pymc/issues/589
+# Compiling from master seems to fix this weeks-taking annoyance (running right now)
 #
 ###############################################
