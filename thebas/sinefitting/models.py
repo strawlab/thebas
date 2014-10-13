@@ -100,21 +100,26 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
 
     """
 
-    # TODO
-    # TODO As soon as we add a group hyperprior to the HalfCauchy amplitudes,
-    # TODO (or in general a non-negative group hyperprior to any amplitude prior)
-    # TODO we get ZeroProb exceptions for some flies
-    # TODO (similar to what was happening before with the other non-negative distros I was trying...)
-    # TODO   - maybe we need to clean the data
-    # TODO   - maybe we need to allow negative amplitudes
-    # TODO   - maybe the models are still not sensible
-    # TODO   - ...
-    # TODO
+    # DONE
+    # DONE As soon as we add a group hyperprior to the HalfCauchy amplitudes,
+    # DONE (or in general a non-negative group hyperprior to any amplitude prior)
+    # DONE we get ZeroProb exceptions for some flies
+    # DONE (similar to what was happening before with the other non-negative distros I was trying...)
+    # DONE   - maybe we need to clean the data
+    # DONE   - maybe we need to allow negative amplitudes
+    # DONE   - maybe the models are still not sensible
+    # DONE   - ...
+    # DONE
+    # Seems related to this regression in pymc 2.3.3 (the one provided in stock anaconda at the moment)
+    #   https://github.com/pymc-devs/pymc/issues/588
+    #   https://github.com/pymc-devs/pymc/issues/589
+    # Compiling from master seems to fix this weeks-taking annoyance (running right now)
+    #
 
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
-    #--- group hyperpriors...
+    # --- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
@@ -128,10 +133,9 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id,
                                         value=25,
                                         lower=1.,
-                                        upper=50.)
-      # should probably use a stronger prior
+                                        upper=50.)  # should probably use a stronger prior
 
-    #--- each individual fly...
+    # --- each individual fly...
     def fly_model(fly):
 
         perturbation_freq = fly['freq']
@@ -140,7 +144,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         max_amplitude = np.max(np.abs(signal))
         flyid = 'fly=%s' % str(fly['flyid'])
 
-        #--- priors
+        # --- priors
 
         # phase ~ VonMises(mu_group, kappa_group)
         phase = pymc.CircVonMises('phase_' + flyid,
@@ -171,17 +175,17 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                        mean_val=mean_val,
                                        freq=freq)
 
-        #--- likelihood (each observation is modeled as a Gaussian, all share their sd)
+        # --- likelihood (each observation is modeled as a Gaussian, all share their sd)
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
-        #--- fly model
+        # --- fly model
         return [y, phase, amplitude, mean_val, sigma]  # freq,
 
-    #--- put all together
+    # --- put all together
     # model = [group_phase_mu, group_phase_kappa]  # weird: this seems to work
     # model = [group_phase_mu, group_phase_kappa, group_amplitude_beta, group_amplitude_alpha]
     model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha]
-      # weird: this seems not to work (but we are still sampling)
+    # weird: this seems not to work (but we are still sampling)
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
     return model, {}
@@ -200,7 +204,7 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
-    #--- group hyperpriors...
+    # --- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
@@ -209,9 +213,8 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=10.)
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
-      # should probably use a stronger prior
 
-    #--- each individual fly...
+    # --- each individual fly...
     def fly_model(fly):
 
         perturbation_freq = fly['freq']
@@ -220,7 +223,7 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         max_amplitude = np.max(np.abs(signal))
         flyid = 'fly=%s' % str(fly['flyid'])
 
-        #--- priors
+        # --- priors
 
         # phase ~ VonMises(mu_group, kappa_group)
         phase = pymc.CircVonMises('phase_' + flyid,
@@ -246,13 +249,13 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                        mean_val=mean_val,
                                        freq=freq)
 
-        #--- likelihood
+        # --- likelihood
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
-        #--- fly model
+        # --- fly model
         return [y, phase, amplitude, freq, mean_val, sigma]
 
-    #--- put all together
+    # --- put all together
     model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha, group_amplitude_beta]
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
@@ -277,7 +280,7 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
-    #--- group hyperpriors...
+    # --- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
@@ -286,9 +289,9 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     mean_group_amplitude = np.mean([np.mean(np.abs(fly['wba'])) for _, fly in group_data.iterrows()])
     group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=10.)
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
-      # should probably use a stronger prior
+    # should probably use a stronger prior
 
-    #--- each individual fly...
+    # --- each individual fly...
     def fly_model(fly):
 
         perturbation_freq = fly['freq']
@@ -297,7 +300,7 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         max_amplitude = np.max(np.abs(signal))
         flyid = 'fly=%s' % str(fly['flyid'])
 
-        #--- priors
+        # --- priors
 
         # phase ~ VonMises(mu_group, kappa_group)
         phase = pymc.CircVonMises('phase_' + flyid,
@@ -327,13 +330,13 @@ def gpa_t2_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                        mean_val=mean_val,
                                        freq=freq)
 
-        #--- likelihood
+        # --- likelihood
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
-        #--- fly model
+        # --- fly model
         return [y, phase, amplitude, freq, mean_val, sigma]
 
-    #--- put all together
+    # --- put all together
     model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha, group_amplitude_beta]
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
@@ -359,7 +362,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
-    #--- group hyperpriors...
+    # --- group hyperpriors...
     group_id = 'group="%s"' % group_id
     # group phase - parameters for Von Mises
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=SMALL, upper=10)
@@ -372,7 +375,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     group_dc_mu = pymc.Normal('dcMu_' + group_id, mu=0, tau=10)
     group_dc_std = pymc.Uniform('dcStd_' + group_id, lower=SMALL, upper=100)
 
-    #--- each individual fly...
+    # --- each individual fly...
     def fly_model(fly):
 
         perturbation_freq = fly['freq']
@@ -380,7 +383,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         signal = fly['wba']
         flyid = 'fly=%s' % str(fly['flyid'])
 
-        #--- priors
+        # --- priors
 
         # phase ~ VonMises(mu_group, kappa_group)
         phase = pymc.CircVonMises('phase_' + flyid,
@@ -410,13 +413,13 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                        mean_val=mean_val,
                                        freq=freq)
 
-        #--- likelihood
+        # --- likelihood
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
-        #--- fly model
+        # --- fly model
         return [y, phase, amplitude, freq, mean_val, sigma]
 
-    #--- put all together
+    # --- put all together
     model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha, group_amplitude_beta]
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
@@ -445,7 +448,7 @@ def gpa3(group_id, group_data, min_num_obs=10):
     # group amplitude
     max_amplitude = np.max([np.max(np.abs(fly.wba)) for _, fly in group_data.iterrows()])
     group_amplitude = pymc.Uniform('amplitude_' + group_id, lower=1E-6, upper=max_amplitude)
-                                                                     # just max_amplitude is not ok
+    # just max_amplitude is not ok
 
     def fly_model(fly):
 
@@ -454,7 +457,7 @@ def gpa3(group_id, group_data, min_num_obs=10):
         signal = fly['wba']
         flyid = 'fly=%s' % str(fly['flyid'])
 
-        #--- priors
+        # --- priors
         phase_kappa = pymc.Uniform('kappa_' + flyid, 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
         phase = pymc.CircVonMises('phase_' + flyid,              # mu shrinked to the group phase
                                   mu=group_phase,
@@ -472,10 +475,10 @@ def gpa3(group_id, group_data, min_num_obs=10):
                                        mean_val=mean_val,
                                        freq=perturbation_freq)
 
-        #--- likelihood
+        # --- likelihood
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
-        #--- model
+        # --- model
         return [y, amplitude, phase, sigma, mean_val]
 
     model = [group_phase, group_phase_mu, group_phase_kappa, group_amplitude]
@@ -523,7 +526,7 @@ def instantiate_model(freq=2.,
     from thebas.sinefitting.perturbation_experiment_data import perturbation_data_to_records
 
     # Pick the specified model
-    if not model_id in MODEL_FACTORIES:
+    if model_id not in MODEL_FACTORIES:
         raise Exception('Do not know a model with id %s' % model_id)
     model_factory = MODEL_FACTORIES[model_id]
 
@@ -537,7 +540,6 @@ def instantiate_model(freq=2.,
     model, sample_params = model_factory(group_id, group_data)
 
     return group_id, group_data, model_factory, model, sample_params
-
 
 
 ###############################################
