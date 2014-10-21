@@ -352,7 +352,7 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
     # FIXME: this model never worked... revisit if necessary
     #        it seeks to shrink DC too (seems that one genotype is more biased right than the other...)
     #
-    
+
     # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
