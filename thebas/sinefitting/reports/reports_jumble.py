@@ -3,7 +3,6 @@
 from itertools import product
 import os.path as op
 from glob import glob
-from user import home
 import re
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
@@ -11,9 +10,9 @@ import numpy as np
 import pymc
 from pymc.database.base import batchsd
 from pymc.utils import hpd
-from pymc.diagnostics import gelman_rubin
 from pandas import DataFrame
 import matplotlib.pyplot as plt
+
 from thebas.misc import ensure_dir
 from thebas.sinefitting import DEFAULT_MCMC_RESULTS_DIR, DEFAULT_PLOTS_DIR
 from thebas.sinefitting.models import perturbation_signal
@@ -95,19 +94,20 @@ def flies_and_variables(result, refvar='phase'):
       - Many flies (all with the same parameterization)
     """
     trace_names = result.varnames()[0]  # Assume ATM that the first chain has all the variables of interest
-    hyperfly = result.name.partition('__')[2]  # Nasty
-    hyperfly_variables = [tn[0:-len('_' + hyperfly)] for tn in trace_names if tn.endswith('_' + hyperfly)]
+    hyperfly = result.name.partition('__')[2].rpartition('__')[0]  # Nasty
+    hyperfly_postfix = '_group="%s"' % hyperfly
+    hyperfly_variables = [tn[0:-len(hyperfly_postfix)] for tn in trace_names if tn.endswith(hyperfly_postfix)]
     flies = sorted(set(tn[len('%s_' % refvar):] for tn in trace_names
                        if tn.startswith('%s_' % refvar)) - {hyperfly})
     flies_variables = [tn[0:-len('_' + flies[0])] for tn in trace_names if tn.endswith('_' + flies[0])]
-    return hyperfly, hyperfly_variables, flies, flies_variables
+    return hyperfly, hyperfly_postfix, hyperfly_variables, flies, flies_variables
 
 
 def cache_all_traces():
     """Cache all traces to allow quick retrieval, beyond pymc pickledb madness."""
     for result_path in all_computed_results().path:
         result = MCMCRunManager(result_path)
-        hyperfly, hyperfly_variables, flies, flies_variables = flies_and_variables(result)
+        hyperfly, hyperfly_postfix, hyperfly_variables, flies, flies_variables = flies_and_variables(result)
         result.num_chains()
         # Cache all traces for quick retrieval
         for var in hyperfly_variables:
@@ -432,7 +432,7 @@ def text_hpd_report(varname='phase'):
         silenced = MCMCRunManager(data[data.genotype == 'VT37804_TNTE'].iloc[0]['path'])
         def varnames(result, varname):
             varname_suffix = '_' + varname
-            hyperfly, hyperfly_variables, flies, flies_variables = flies_and_variables(result)
+            hyperfly, hyperfly_postfix, hyperfly_variables, flies, flies_variables = flies_and_variables(result)
             hvar = hyperfly + varname_suffix if varname in set(hyperfly_variables) else None
             fvars = [fly + varname_suffix for fly in flies] if varname in set(flies_variables) else None
             return hvar, fvars
@@ -469,115 +469,6 @@ def text_hpd_report(varname='phase'):
 
 # Real data over fitted curve and vs ideal curve
 
-# BODE Plots
-
-def bodelike_plot(model_id='gpa3',
-                  varname='phase',
-                  num_chains=4, takelast=10000,
-                  alpha=0.05,
-                  plot_control=True, plot_silenced=True, img_format='png',
-                  show=False):
-
-    mpl_params()
-
-    def varnames(result, varname):
-        hyperfly, hyperfly_variables, flies, flies_variables = flies_and_variables(result)
-        varname_prefix = varname + '_'
-        hvar = varname_prefix + hyperfly if varname in set(hyperfly_variables) else None
-        fvars = [varname_prefix + fly for fly in flies] if varname in set(flies_variables) else None
-        return hvar, fvars
-
-    def mix_chains(chains):
-        # assert len(chains) >= num_chains
-        mixed = np.array([np.nan] * (num_chains * takelast))
-        for i, chain in enumerate(chains):
-            mixed[i * takelast: (i+1) * takelast] = chain[-takelast:]
-        return mixed
-
-    # Available results
-    results = all_computed_results()
-    results = results[results.model_id == model_id]
-    ctraces = {}
-    straces = {}
-    # FIXME: here we got wrong genotypes...
-    results.genotype = results.genotype.apply(lambda gen: gen.partition('__')[0])
-    # Collect and mix traces for all frequencies
-    for (model_id, freq), data in results.groupby(('model_id', 'freq')):
-        print freq
-        control = MCMCRunManager(data[data.genotype == 'VT37804_TNTin'].iloc[0]['path'])  # ad-hoc
-        silenced = MCMCRunManager(data[data.genotype == 'VT37804_TNTE'].iloc[0]['path'])  # ad-hoc
-        chvar, _ = varnames(control, varname)   # control hierarchical var, fly vars
-        shvar, _ = varnames(silenced, varname)  # silenced hierarchical var, fly vars
-        ctraces[freq] = mix_chains(control.traces(chvar))
-        straces[freq] = mix_chains(silenced.traces(shvar))
-    # The frequencies we are interested in...
-    freqs = (0.5, 1, 2, 4, 8, 16, 32, 40)
-    # Copute HPDs. Compute the rope too, see Kruschke.
-    chpds = [hpd(ctraces[freq], alpha) for freq in freqs]
-    shpds = [hpd(straces[freq], alpha) for freq in freqs]
-    # Plot the big thingie
-    if plot_control:
-        plt.plot(np.hstack([ctraces[freq] for freq in freqs]), color='b', label='control')
-    if plot_silenced:
-        plt.plot(np.hstack([straces[freq] for freq in freqs]), color='r', label='silenced')
-    for i, freq in enumerate(freqs):
-        xmin = num_chains * takelast * i
-        xmax = num_chains * takelast * (i + 1)
-        plt.axvline(x=xmax, color='k')
-        plt.plot((xmin, xmax), [chpds[i][0]] * 2, color='c', linewidth=4)
-        plt.plot((xmin, xmax), [chpds[i][1]] * 2, color='c', linewidth=4)
-        plt.plot((xmin, xmax), [shpds[i][0]] * 2, color='m', linewidth=4)
-        plt.plot((xmin, xmax), [shpds[i][1]] * 2, color='m', linewidth=4)
-        # Gelman-Rubin R^2
-        print '\t%s %s control freq %.1f; GR=%.2f' % (model_id, varname, freq,
-                                                      gelman_rubin(ctraces[freq].reshape(num_chains, -1)))
-        print '\t%s %s silence freq %.1f; GR=%.2f' % (model_id, varname, freq,
-                                                      gelman_rubin(straces[freq].reshape(num_chains, -1)))
-        # TODO: Geweke, autocorr, put graphically in the plot
-    plt.title('Model: %s; Variable: %s' % (model_id, varname))
-    plt.xlabel('$\omega$')
-    plt.ylabel('%s' % varname)
-    plt.tick_params(axis='x',           # changes apply to the x-axis
-                    which='both',       # both major and minor ticks are affected
-                    bottom='off',       # ticks along the bottom edge are off
-                    top='off',          # ticks along the top edge are off
-                    labelbottom='off')  # labels along the bottom edge are off
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(op.join(home, '%s-%s.%s' % (model_id, varname, img_format)))
-    if show:
-        plt.show()
-
-
-def failsafe_plot(model, var, fignum=0, show=False):
-    if var == 'amplitude' and 'gpa' not in model:
-        return
-    print model, var
-    try:
-        plt.figure(fignum)
-        bodelike_plot(model_id=model, varname=var, show=show)
-        plt.close(fignum)
-    except Exception, e:
-        print '\tFailed: %s' % str(e)
-
-# gpa_t1 & family hyperpriors: amplitudeAlpha, amplitubeBeta phaseKappa, phaseMu
-bodelike_plot(model_id='gpa_t1', varname='amplitudeAlpha')
-# bodelike_plot(model_id='gpa_t1', varname='amplitudeBeta')
-# bodelike_plot(model_id='gpa_t1', varname='phaseKappa')
-# bodelike_plot(model_id='gpa_t1', varname='phaseMu')
-exit(77)
-
-# # models = ('gpa1', 'gpa2', 'gpa3', 'gpa3nomap', 'gpa4', 'gp1', 'gp2')
-# models = ('gp1', 'gpa3', 'gpa3nomap')
-# # models = ('gpa4',)
-# # models = ('gpa2',)
-# # models = ('gp2',)
-# hypervars = ('amplitude', 'phase')
-# Parallel(n_jobs=1)(delayed(failsafe_plot)(model, var, show=False, fignum=i)
-#                    for i, (model, var) in enumerate(product(models, hypervars)))
-#
-# exit(71)
-#
 
 ###########################################
 # DC vs Amplitude
