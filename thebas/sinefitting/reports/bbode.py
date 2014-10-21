@@ -117,6 +117,6 @@ if __name__ == '__main__':
     fignum = 0
     for model, variables in models_hypervars:
         for variable in variables:
-            print 'model=%s, variable=%s' % (model, variables)
+            print 'model=%s, variable=%s' % (model, variable)
             failsafe_plot(model, variable, fignum=fignum, show=False)
             fignum += 1
