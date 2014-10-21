@@ -37,8 +37,7 @@ def mpl_params():
     rc('text', usetex=True)
     rcParams['text.latex.preamble'] = [r'\boldmath']
     try:
-        from mpltools import style
-        style.use('ggplot')
+        import seaborn  # seaborn defaults are nicer
     except:
         pass
 
@@ -88,7 +87,7 @@ def all_computed_results(results_dir=DEFAULT_MCMC_RESULTS_DIR):
                      columns=('model_id', 'freq', 'genotype', 'path'))
 
 
-def flies_and_variables(result, refvar='phase', varname_first=True):
+def flies_and_variables(result, refvar='phase'):
     """
     Really ad-hoc
     We assume a model in which...
@@ -97,16 +96,10 @@ def flies_and_variables(result, refvar='phase', varname_first=True):
     """
     trace_names = result.varnames()[0]  # Assume ATM that the first chain has all the variables of interest
     hyperfly = result.name.partition('__')[2]  # Nasty
-    if varname_first:
-        hyperfly_variables = [tn[0:-len('_' + hyperfly)] for tn in trace_names if tn.endswith('_' + hyperfly)]
-        flies = sorted(set(tn[len('%s_' % refvar):] for tn in trace_names
-                           if tn.startswith('%s_' % refvar)) - {hyperfly})
-        flies_variables = [tn[0:-len('_' + flies[0])] for tn in trace_names if tn.endswith('_' + flies[0])]
-    else:
-        hyperfly_variables = [tn[len(hyperfly + '_'):] for tn in trace_names if tn.startswith(hyperfly + '_')]
-        flies = sorted(set(tn[:-len('_%s' % refvar)] for tn in trace_names
-                           if tn.endswith('_%s' % refvar)) - {hyperfly})
-        flies_variables = [tn[len(flies[0] + '_'):] for tn in trace_names if tn.startswith(flies[0] + '_')]
+    hyperfly_variables = [tn[0:-len('_' + hyperfly)] for tn in trace_names if tn.endswith('_' + hyperfly)]
+    flies = sorted(set(tn[len('%s_' % refvar):] for tn in trace_names
+                       if tn.startswith('%s_' % refvar)) - {hyperfly})
+    flies_variables = [tn[0:-len('_' + flies[0])] for tn in trace_names if tn.endswith('_' + flies[0])]
     return hyperfly, hyperfly_variables, flies, flies_variables
 
 
@@ -479,7 +472,7 @@ def text_hpd_report(varname='phase'):
 # BODE Plots
 
 def bodelike_plot(model_id='gpa3',
-                  varname='phase', varname_first=None,
+                  varname='phase',
                   num_chains=4, takelast=10000,
                   alpha=0.05,
                   plot_control=True, plot_silenced=True, img_format='png',
@@ -487,20 +480,11 @@ def bodelike_plot(model_id='gpa3',
 
     mpl_params()
 
-    if varname_first is None:
-        varname_first = model_id not in {'gp1', 'gp2', 'gpa1', 'gpa2'}  # Models with old variable naming scheme
-
-    def varnames(result, varname, varname_first=varname_first):
-        hyperfly, hyperfly_variables, flies, flies_variables = \
-            flies_and_variables(result, varname_first=varname_first)
-        if varname_first:
-            varname_prefix = varname + '_'
-            hvar = varname_prefix + hyperfly if varname in set(hyperfly_variables) else None
-            fvars = [varname_prefix + fly for fly in flies] if varname in set(flies_variables) else None
-        else:
-            varname_suffix = '_' + varname
-            hvar = hyperfly + varname_suffix if varname in set(hyperfly_variables) else None
-            fvars = [fly + varname_suffix for fly in flies] if varname in set(flies_variables) else None
+    def varnames(result, varname):
+        hyperfly, hyperfly_variables, flies, flies_variables = flies_and_variables(result)
+        varname_prefix = varname + '_'
+        hvar = varname_prefix + hyperfly if varname in set(hyperfly_variables) else None
+        fvars = [varname_prefix + fly for fly in flies] if varname in set(flies_variables) else None
         return hvar, fvars
 
     def mix_chains(chains):
@@ -515,6 +499,8 @@ def bodelike_plot(model_id='gpa3',
     results = results[results.model_id == model_id]
     ctraces = {}
     straces = {}
+    # FIXME: here we got wrong genotypes...
+    results.genotype = results.genotype.apply(lambda gen: gen.partition('__')[0])
     # Collect and mix traces for all frequencies
     for (model_id, freq), data in results.groupby(('model_id', 'freq')):
         print freq
@@ -562,6 +548,7 @@ def bodelike_plot(model_id='gpa3',
     if show:
         plt.show()
 
+
 def failsafe_plot(model, var, fignum=0, show=False):
     if var == 'amplitude' and 'gpa' not in model:
         return
@@ -574,10 +561,11 @@ def failsafe_plot(model, var, fignum=0, show=False):
         print '\tFailed: %s' % str(e)
 
 # gpa_t1 & family hyperpriors: amplitudeAlpha, amplitubeBeta phaseKappa, phaseMu
-# bodelike_plot(model_id='gpa_t1', varname='amplitudeAlpha')
+bodelike_plot(model_id='gpa_t1', varname='amplitudeAlpha')
 # bodelike_plot(model_id='gpa_t1', varname='amplitudeBeta')
 # bodelike_plot(model_id='gpa_t1', varname='phaseKappa')
 # bodelike_plot(model_id='gpa_t1', varname='phaseMu')
+exit(77)
 
 # # models = ('gpa1', 'gpa2', 'gpa3', 'gpa3nomap', 'gpa4', 'gp1', 'gp2')
 # models = ('gp1', 'gpa3', 'gpa3nomap')
