@@ -64,19 +64,19 @@ def bodelike_plot(model_id='gpa3',
     for i, freq in enumerate(freqs):
         xmin = num_chains * takelast * i
         xmax = num_chains * takelast * (i + 1)
-        xticklocations.append(xmin + (xmax - xmin) / 2.)
-        xticklabels.append('%g' % freq)
         plt.axvline(x=xmax, color='k')
         plt.plot((xmin, xmax), [chpds[i][0]] * 2, color='c', linewidth=4)
         plt.plot((xmin, xmax), [chpds[i][1]] * 2, color='c', linewidth=4)
         plt.plot((xmin, xmax), [shpds[i][0]] * 2, color='m', linewidth=4)
         plt.plot((xmin, xmax), [shpds[i][1]] * 2, color='m', linewidth=4)
-        # Gelman-Rubin R^2
-        print '\t%s %s control freq %.1f; GR=%.2f' % (model_id, varname, freq,
-                                                      gelman_rubin(ctraces[freq].reshape(num_chains, -1)))
-        print '\t%s %s silence freq %.1f; GR=%.2f' % (model_id, varname, freq,
-                                                      gelman_rubin(straces[freq].reshape(num_chains, -1)))
-        # TODO: Geweke, autocorr, put graphically in the plot
+        # Gelman-Rubin R^2 (might interest: Geweke, autocorr, put graphically in the plot)
+        cgr = gelman_rubin(ctraces[freq].reshape(num_chains, -1))
+        print '\t%s %s control freq %.1f; GR=%.2f' % (model_id, varname, freq, cgr)
+        sgr = gelman_rubin(straces[freq].reshape(num_chains, -1))
+        print '\t%s %s silence freq %.1f; GR=%.2f' % (model_id, varname, freq, sgr)
+        # xticks
+        xticklocations.append(xmin + (xmax - xmin) / 2.)
+        xticklabels.append('%g\nsgr=%.2f\ncgr=%.2f' % (freq, sgr, cgr))
     plt.title('Model: %s; Variable: %s' % (model_id, varname))
     plt.xlabel('$\omega$')
     plt.ylabel('%s' % varname)
