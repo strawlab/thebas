@@ -166,10 +166,7 @@ def gpa_t1(group_id, group_data, min_num_obs=10, SMALL=1E-9):
         return [y, phase, amplitude, mean_val, sigma]  # freq,
 
     # --- put all together
-    # model = [group_phase_mu, group_phase_kappa]  # weird: this seems to work
-    # model = [group_phase_mu, group_phase_kappa, group_amplitude_beta, group_amplitude_alpha]
     model = [group_phase_mu, group_phase_kappa, group_amplitude_alpha, group_amplitude_beta]
-    # weird: this seems not to work (but we are still sampling)
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
     return model, {}
@@ -431,8 +428,11 @@ def gpad_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
 
 def gpa3(group_id, group_data, min_num_obs=10):
 
+    # check and clean data
     group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
 
+    # --- group hyperpriors...
+    group_id = 'group="%s"' % group_id
     # group phase
     group_phase_kappa = pymc.Uniform('phaseKappa_' + group_id, lower=1E-9, upper=100)
     group_phase_mu = pymc.CircVonMises('phaseMu_' + group_id, mu=0, kappa=0)
@@ -470,14 +470,13 @@ def gpa3(group_id, group_data, min_num_obs=10):
         # --- likelihood
         y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
 
-        # --- model
+        # --- fly model
         return [y, amplitude, phase, sigma, mean_val]
 
+    # --- put all together
     model = [group_phase, group_phase_mu, group_phase_kappa, group_amplitude]
-
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
-
     return model, {}
 
 
