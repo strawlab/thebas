@@ -64,8 +64,6 @@ def cl(MODELS=('gpa_t1', 'gpa_t1_slice', 'gpa_t2_slice', 'gpad_t1_slice', 'gpa3'
               '&>%s/%s.log' %
               (af, genotype, model, log_dir, expid))
 
-cl()
-
 
 if __name__ == '__main__':
     import argh
