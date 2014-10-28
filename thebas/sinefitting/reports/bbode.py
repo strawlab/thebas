@@ -111,7 +111,9 @@ if __name__ == '__main__':
         ('gpa_t1', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa_t1_slice', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa_t2_slice', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
-        ('gpa3', ('amplitude', 'phase'))
+        ('gpa3', ('amplitude', 'phase')),
+        ('gpa3hc1', ('amplitude', 'phase')),
+        ('gpa3hc2', ('amplitude', 'phase')),
     )
 
     fignum = 0
