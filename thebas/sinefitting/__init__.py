@@ -58,3 +58,10 @@ DCN_TEST_HDF5 = DCN_PROJECT.flyhdf5('VT37804_TNTE', '2012-12-18-16-04-06')
 # HS
 HS_PROJECT = PBProject(name='HS')
 HS_TEST_HDF5 = DCN_PROJECT.flyhdf5('VT58487_tshirtgal80_TNTE', '2013-04-11-16-31-36')
+
+
+# label -> project
+PB_PROJECTS = {
+    'hs': HS_PROJECT,
+    'dcn': DCN_PROJECT,
+}

@@ -611,7 +611,8 @@ MODEL_FACTORIES = {model.__name__: model for model in [
 ]}
 
 
-def instantiate_model(freq=2.,
+def instantiate_model(pbproject,
+                      freq=2.,
                       genotype='VT37804_TNTE',
                       model_id='gpa_t1'):
     """
@@ -619,6 +620,9 @@ def instantiate_model(freq=2.,
 
     Parameters
     ----------
+    pbproject: PBProject instance
+      At the moment, this will be HS_PROJECT or DCN_PROJECT
+
     freq : float, default 2
       The frequency of the perturbation
 
@@ -645,7 +649,7 @@ def instantiate_model(freq=2.,
 
     # Read and select the data
     group_id = 'freq=%g__genotype=%s' % (freq, genotype)
-    group_data = perturbation_data_to_records()
+    group_data = perturbation_data_to_records(pbproject=pbproject)
     group_data = group_data[(group_data['freq'] == freq) &  # select the group data
                             (group_data['genotype'] == genotype)]
 
