@@ -10,7 +10,7 @@ from thebas.sinefitting.models import instantiate_model
 from thebas.sinefitting.results import MCMCRunManager
 
 
-def sample(pbproject='ds',
+def sample(pbproject='dcn',
            freq=2.,
            genotype_id='VT37804_TNTE',
            model_id='gpa_t1',
@@ -57,20 +57,21 @@ def sample(pbproject='ds',
 
 
 def cl(PROJECTS=sorted(PB_PROJECTS.keys()),
-       MODELS=('gpa_t1', 'gpa_t1_slice', 'gpa_t2_slice', 'gpad_t1_slice', 'gpa3', 'gpa3hc1', 'gpa3hc2'),
-       GROUPS=('VT37804_TNTE', 'VT37804_TNTin'),   # DCD-silenced, control)
+       MODELS=('gpa3', 'gpa_t2_slice', 'gpa3hc1', 'gpa3hc2'),
        FREQS=(0.5, 1., 2., 4., 8., 16., 32., 40.)[::-1],  # angular frequencies (rad/s)
        log_dir='~'):
     """Generates command lines to launch the script with different parameters."""
-    for project, model, af, genotype in product(PROJECTS, MODELS, FREQS, GROUPS):
-        expid = '%s__%s__%s__%g' % (project, model, genotype, af)
-        print('python2 -u thebas/sinefitting/samplers.py sample '
-              '--pbproject %s '
-              '--freq %g '
-              '--genotype-id %s '
-              '--model-id %s '
-              '&>%s/%s.log' %
-              (project, af, genotype, model, log_dir, expid))
+    for project in PROJECTS:
+        pbproject = PB_PROJECTS[project]
+        for model, af, genotype in product(MODELS, FREQS, pbproject.genotypes()):
+            expid = '%s__%s__%s__%g' % (project, model, genotype, af)
+            print('python2 -u thebas/sinefitting/samplers.py sample '
+                  '--pbproject %s '
+                  '--freq %g '
+                  '--genotype-id %s '
+                  '--model-id %s '
+                  '&>%s/%s.log' %
+                  (project, af, genotype, model, log_dir, expid))
 
 
 if __name__ == '__main__':
