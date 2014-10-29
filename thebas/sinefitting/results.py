@@ -12,7 +12,9 @@ import pymc
 from pymc.Matplot import plot, summary_plot
 import matplotlib.pyplot as plt
 import numpy as np
+import shutil
 from thebas.misc import ensure_dir
+from thebas.sinefitting import HS_PROJECT, DCN_PROJECT
 from thebas.sinefitting.data import save_perturbation_record_data_to_hdf5, \
     load_perturbation_record_data_from_hdf5
 
@@ -130,6 +132,7 @@ class MCMCRunManager(object):
     def group_plots_in_dirs(self):
         def ensure_symlink(dest_dir, file_name, plot_file):
             dest_file = op.join(dest_dir, file_name)
+            plot_file = op.join('../%s' % op.basename(plot_file))
             if not op.islink(dest_file):
                 ensure_dir(dest_dir)
                 os.symlink(plot_file, dest_file)
@@ -214,9 +217,33 @@ class MCMCRunManager(object):
 
         return self.db_file
 
+# ----- Maintenance
+
+
+def regroup_mcmc_plots(pbproject=DCN_PROJECT):
+    """Removes old plot-results symlinks and recreates them, so they are relative."""
+    for result in os.listdir(pbproject.mcmc_dir):
+        # Get rid of old absolute symlinks
+        result_plots_dir = op.join(pbproject.mcmc_dir, result, 'plots')
+        for plots_group_dir in os.listdir(result_plots_dir):
+            if op.isdir(op.join(result_plots_dir, plots_group_dir)):
+                shutil.rmtree(op.join(result_plots_dir, plots_group_dir))
+        # Recreate groups with relative symlinks
+        MCMCRunManager(root_dir=op.join(pbproject.mcmc_dir, result)).group_plots_in_dirs()
+
+#
+# umask was wrong in strz (now fixed); run in DCN and HS once fitting is done:
+#   sudo find /mnt/strawscience/santi/dcn-tethered-bayesian -type d -exec chmod 0770 {} \;
+#   sudo find /mnt/strawscience/santi/dcn-tethered-bayesian -type f -exec chmod 0660 {} \;
+#
+
+if __name__ == '__main__':
+    regroup_mcmc_plots(pbproject=DCN_PROJECT)
+    regroup_mcmc_plots(pbproject=HS_PROJECT)
+
 #
 #
-# TODO: MCMCRunMAnager should just contain all from model spec to sampling details
+# TODO: MCMCRunManager should just contain all from model spec to sampling details
 #       do in the next developing iteration
 #
 # TODO: look at hdf5ea backend if we were to get traces of big data vectors
