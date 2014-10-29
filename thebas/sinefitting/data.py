@@ -374,3 +374,11 @@ if __name__ == '__main__':
         for _, row in data.iterrows():
             print('fly %s (genotype %s) has %d observations for frequency %g' %
                   (row['flyid'], row['genotype'], len(row['wba']), row['freq']))
+
+
+#
+# So how much data do we have?
+#   - Do we have n flies?
+#   - Or do we have n cycles?
+#   - Or do we have n observations?
+#

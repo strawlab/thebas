@@ -6,35 +6,32 @@
 
 from setuptools import setup
 
+import thebas
 
 setup(
     name='thebas',
     license='BSD 3 clause',
-    description='Bayesian analysis of thethered data',
-    version='0.1-dev',
+    description='Bayesian analysis of tethered data',
+    version=thebas.__version__,
     url='https://github.com/strawlab/thebas',
     author='Santi Villalba',
     author_email='villalba@imp.univie.ac.at',
-    classifiers=[  # plagiarism from sklearn
+    classifiers=[
         'Intended Audience :: Science/Research',
-        'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD 3 clause'
-        'Programming Language :: Python',
-        'Topic :: Software Development',
         'Topic :: Scientific/Engineering',
-        'Operating System :: Unix',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
+        'Operating System :: Unix',
     ],
     requires=['h5py',
-              'pymc',
+              'pymc',   # >= 2.3.4
+              'pydot',  # for pymc model graphs
               'numpy',
               'matplotlib',
               'pandas',
               'joblib',
               'scipy',
               'dill',
-              'argh',
-              'pydot'],  # FIXME: Make clear which versions
-                         # https://caremad.io/blog/setup-vs-requirement/
+              'argh'],
 )

@@ -13,7 +13,7 @@ from pymc.Matplot import plot, summary_plot
 import matplotlib.pyplot as plt
 import numpy as np
 from thebas.misc import ensure_dir
-from thebas.sinefitting.perturbation_experiment_data import save_perturbation_record_data_to_hdf5, \
+from thebas.sinefitting.data import save_perturbation_record_data_to_hdf5, \
     load_perturbation_record_data_from_hdf5
 
 
@@ -229,8 +229,6 @@ class MCMCRunManager(object):
 #  In the meantime, we can just use pickle (we could monkeypatch to use joblib).
 #  We then cache traces using joblib when requested.
 #  Writing an efficient backend just using plain datafiles should be simple.
-# TODO: disable pytables naturalnamewarning
-# https://www.mail-archive.com/pytables-users@lists.sourceforge.net/msg01130.html
 #
 # TODO: easily restart chains (instead of sampling new chains)
 #

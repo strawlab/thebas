@@ -1,6 +1,6 @@
 # coding=utf-8
 """Bayesian BODE plots."""
-from user import home
+from itertools import product
 import os.path as op
 
 import numpy as np
@@ -8,12 +8,17 @@ import matplotlib.pyplot as plt
 from pymc import gelman_rubin
 from pymc.utils import hpd
 
-from thebas.sinefitting.reports.reports_jumble import flies_and_variables, all_computed_results
+from thebas.misc import ensure_dir
+from thebas.sinefitting.reports import flies_and_variables, all_computed_results
+from thebas.sinefitting import HS_PROJECT, PB_PROJECTS
 from thebas.sinefitting.results import MCMCRunManager
 
 
-def bodelike_plot(model_id='gpa3',
+def bodelike_plot(pbproject=HS_PROJECT,
+                  model_id='gpa3',
                   varname='phase',
+                  control_genotype='VT37804_TNTin',
+                  blocked_genotype='VT37804_TNTE',
                   num_chains=4, takelast=10000,
                   alpha=0.05,
                   plot_control=True, plot_silenced=True, img_format='png',
@@ -33,7 +38,7 @@ def bodelike_plot(model_id='gpa3',
         return mixed
 
     # Available results
-    results = all_computed_results()
+    results = all_computed_results(pbproject.mcmc_dir)
     results = results[results.model_id == model_id]
     ctraces = {}
     straces = {}
@@ -42,8 +47,8 @@ def bodelike_plot(model_id='gpa3',
     # Collect and mix traces for all frequencies
     for (model_id, freq), data in results.groupby(('model_id', 'freq')):
         print '\t\t\tCollecting traces for frequency %g' % freq
-        control = MCMCRunManager(data[data.genotype == 'VT37804_TNTin'].iloc[0]['path'])  # ad-hoc
-        silenced = MCMCRunManager(data[data.genotype == 'VT37804_TNTE'].iloc[0]['path'])  # ad-hoc
+        control = MCMCRunManager(data[data.genotype == control_genotype].iloc[0]['path'])  # ad-hoc
+        silenced = MCMCRunManager(data[data.genotype == blocked_genotype].iloc[0]['path'])  # ad-hoc
         chvar, _ = varnames(control, varname)   # control hierarchical var, fly vars
         shvar, _ = varnames(silenced, varname)  # silenced hierarchical var, fly vars
         ctraces[freq] = mix_chains(control.traces(chvar))
@@ -55,9 +60,9 @@ def bodelike_plot(model_id='gpa3',
     shpds = [hpd(straces[freq], alpha) for freq in freqs]
     # Plot the traces
     if plot_control:
-        plt.plot(np.hstack([ctraces[freq] for freq in freqs]), color='b', label='control')
+        plt.plot(np.hstack([ctraces[freq] for freq in freqs]), color='b', label=control_genotype.replace('_', 'x'))
     if plot_silenced:
-        plt.plot(np.hstack([straces[freq] for freq in freqs]), color='r', label='silenced')
+        plt.plot(np.hstack([straces[freq] for freq in freqs]), color='r', label=blocked_genotype.replace('_', 'x'))
     # Plot the HPD regions + setup ticks
     xticklocations = []
     xticklabels = []
@@ -73,10 +78,10 @@ def bodelike_plot(model_id='gpa3',
         cgr = gelman_rubin(ctraces[freq].reshape(num_chains, -1))
         print '\t%s %s control freq %.1f; GR=%.2f' % (model_id, varname, freq, cgr)
         sgr = gelman_rubin(straces[freq].reshape(num_chains, -1))
-        print '\t%s %s silence freq %.1f; GR=%.2f' % (model_id, varname, freq, sgr)
+        print '\t%s %s blocked freq %.1f; GR=%.2f' % (model_id, varname, freq, sgr)
         # xticks
         xticklocations.append(xmin + (xmax - xmin) / 2.)
-        xticklabels.append('%g\nsgr=%.2f\ncgr=%.2f' % (freq, sgr, cgr))
+        xticklabels.append('%g\nbgr=%.2f\ncgr=%.2f' % (freq, sgr, cgr))
     plt.title('Model: %s; Variable: %s' % (model_id, varname))
     plt.xlabel('$\omega$')
     plt.ylabel('%s' % varname)
@@ -88,18 +93,31 @@ def bodelike_plot(model_id='gpa3',
     plt.xticks(xticklocations, xticklabels)
     plt.legend()
     plt.tight_layout()
-    plt.savefig(op.join(home, '%s-%s.%s' % (model_id, varname, img_format)))
+    # Save
+    dest_dir = op.join(pbproject.plots_dir, 'bbode', model, '%s-vs-%s' % (control_genotype, blocked_genotype))
+    ensure_dir(dest_dir)
+    plt.savefig(op.join(dest_dir, '%s-vs-%s-%s-%s.%s' % (control_genotype,
+                                                         blocked_genotype,
+                                                         model_id,
+                                                         varname,
+                                                         img_format)))
+    # Show
     if show:
         plt.show()
 
 
-def failsafe_plot(model, var, fignum=0, show=False):
+def failsafe_plot(pbproject, control_genotype, blocked_genotype, model, var, fignum=0, show=False):
     if var == 'amplitude' and 'gpa' not in model:
         return
     print model, var
     try:
         plt.figure(fignum)
-        bodelike_plot(model_id=model, varname=var, show=show)
+        bodelike_plot(pbproject=pbproject,
+                      control_genotype=control_genotype,
+                      blocked_genotype=blocked_genotype,
+                      model_id=model,
+                      varname=var,
+                      show=show)
         plt.close(fignum)
     except Exception, e:
         print '\tFailed: %s' % str(e)
@@ -117,8 +135,18 @@ if __name__ == '__main__':
     )
 
     fignum = 0
-    for model, variables in models_hypervars:
-        for variable in variables:
-            print 'model=%s, variable=%s' % (model, variable)
-            failsafe_plot(model, variable, fignum=fignum, show=False)
-            fignum += 1
+    for pbproject in PB_PROJECTS.values():
+        controls = [genotype for genotype in pbproject.genotypes() if pbproject.is_control(genotype)]
+        blockeds = [genotype for genotype in pbproject.genotypes() if not pbproject.is_control(genotype)]
+        for control, blocked in product(controls, blockeds):
+            for model, variables in models_hypervars:
+                for variable in variables:
+                    print 'model=%s, variable=%s' % (model, variable)
+                    failsafe_plot(pbproject,
+                                  control_genotype=control,
+                                  blocked_genotype=blocked,
+                                  model=model,
+                                  var=variable,
+                                  fignum=fignum,
+                                  show=False)
+                    fignum += 1

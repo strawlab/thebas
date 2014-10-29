@@ -5,7 +5,7 @@ import os
 
 
 def home():
-    #What is the equivalent of user.home in python 3?
+    # What is the equivalent of user.home in python 3?
     return op.expanduser('~')
 
 

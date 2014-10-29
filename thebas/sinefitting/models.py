@@ -640,7 +640,7 @@ def instantiate_model(pbproject,
     """
 
     # We will need to access the data
-    from thebas.sinefitting.perturbation_experiment_data import perturbation_data_to_records
+    from thebas.sinefitting.data import perturbation_data_to_records
 
     # Pick the specified model
     if model_id not in MODEL_FACTORIES:
