@@ -18,13 +18,13 @@ from pandas import DataFrame
 from thebas.externals.tethered_data.misc import rostimearr2datetimeidx
 from thebas.externals.tethered_data.strokelitude import Strokelitude, filter_signals_gaussian, filter_signals_lowpass, \
     detect_noflight, remove_noflight
-from thebas.sinefitting import PERTURBATION_BIAS_SILENCED_FLIES, PERTURBATION_BIAS_KINDAWT_FLIES, \
-    PERTURBATION_BIAS_DATA_ROOT, TEST_HDF5
+from thebas.sinefitting import DCN_TEST_HDF5, HS_PROJECT
 
 
 ####################################
 # Convenient access to the data as provided by strokelitude
 ####################################
+from thebas.sinefitting import DCN_PROJECT
 
 
 class TetheredSinewaveData(object):
@@ -39,7 +39,7 @@ class TetheredSinewaveData(object):
         These are virtual-reality-controler measurements (higher frequency)
 
         Example:
-        >>> bias, btsec, bnsec, bt = TetheredSinewaveData(TEST_HDF5).bias()
+        >>> bias, btsec, bnsec, bt = TetheredSinewaveData(DCN_TEST_HDF5).bias()
         """
         with h5py.File(self.h5) as reader:
             bias = reader['bias']
@@ -60,7 +60,7 @@ class TetheredSinewaveData(object):
         These are sensed quantities (lower frequency).
 
         Example:
-        >>> fa, ga, fon, gon, ts, tns, t = TetheredSinewaveData(TEST_HDF5).nfga()
+        >>> fa, ga, fon, gon, ts, tns, t = TetheredSinewaveData(DCN_TEST_HDF5).nfga()
         """
         with h5py.File(self.h5) as reader:
             nfga = reader['new_figure_ground_angles']
@@ -76,7 +76,7 @@ class TetheredSinewaveData(object):
         These are the virtual-reality configuration files.
 
         Example:
-        >>> fmf, gmf, ts, tns, t = TetheredSinewaveData(TEST_HDF5).nfgm()
+        >>> fmf, gmf, ts, tns, t = TetheredSinewaveData(DCN_TEST_HDF5).nfgm()
         """
         with h5py.File(self.h5) as reader:
             nfgm = reader['new_figure_ground_models']
@@ -84,9 +84,9 @@ class TetheredSinewaveData(object):
                 nfgm['t_secs'], nfgm['t_nsecs'], nfgm['t']
 
 
-def all_biases():
+def all_biases(pbproject):
     """A convenience function that returns a dictionary {flyid->(bias, bias_t)} for all the flies in the experiment."""
-    flies_dirs = (PERTURBATION_BIAS_SILENCED_FLIES, PERTURBATION_BIAS_KINDAWT_FLIES)
+    flies_dirs = pbproject.all_genotypes_dirs()
     biases = {}
     for root in flies_dirs:
         for hdf5 in glob(op.join(root, '*.hdf5')):
@@ -102,12 +102,12 @@ def perturbation_bias_info():
     The code is adapted from "lisa_bg_cl_perturbation.py".
     """
     # Perturbation angular frequencies (rad/s) (Recall dtheta/dt = w = 2*pi*f)
-    freqs = np.array([0.5, 1, 2, 4, 8, 16, 32, 40])
+    freqs = np.array([0.5, 1, 2, 4, 8, 16, 32, 40])  # FIXME: hardcoded
     # For how long each *angular* frequency is "on" (seconds).
     # Let a frequency run for 8 complete cycles.
     # The alternative could be a fixed ontime length for all freqs.
     # But that could be inconvenient for Lisa and maybe the fly.
-    freqs_on_durations = 16 * np.pi / freqs
+    freqs_on_durations = 16 * np.pi / freqs  # FIXME: hardcoded
 
     freqs_start_stop_times = np.append(0, np.cumsum(freqs_on_durations))
     return freqs, freqs_on_durations, freqs_start_stop_times
@@ -170,30 +170,22 @@ def read_flies(root, remove_silences=True):
     return op.basename(root), flies
 
 
-def silenced_data(remove_silences=True):
-    return read_flies(PERTURBATION_BIAS_SILENCED_FLIES, remove_silences=remove_silences)
-
-
-def kindawt_data(remove_silences=True):
-    return read_flies(PERTURBATION_BIAS_KINDAWT_FLIES, remove_silences=remove_silences)
-
-
-def all_perturbation_data(remove_silences=True):
+def all_perturbation_data(pbproject, remove_silences=True):
     """{group_name -> {flyname -> {freq -> (wba, wba_t, ga)}}}"""
-    return dict([silenced_data(remove_silences=remove_silences), kindawt_data(remove_silences=remove_silences)])
+    return dict([read_flies(root, remove_silences=remove_silences) for root in pbproject.all_genotypes_dirs()])
 
 
-def print_data_sizes_summary(data=None):
+def print_data_sizes_summary(pbproject=HS_PROJECT, data=None):
     """Prints a summary of data sizes.
     Just an example of how to use all_perturbation_data.
     """
     if data is None:
-        data = all_perturbation_data()
+        data = all_perturbation_data(pbproject)
     for group, flies in data.iteritems():
         print('%s flies data sizes...' % group)
-        for fly, frequency_groups in kindawt_data()[1].iteritems():
-            print('\tFly:', fly)
-            for frequency, (wba, wba_t) in sorted(frequency_groups.items()):
+        for fly, frequency_groups in flies.iteritems():
+            print '\tFly:', fly
+            for frequency, (wba, wba_t, ga) in sorted(frequency_groups.items()):
                 print('\t\tFrequency=%.1f\t NumObservations=%d' % (frequency, len(wba)))
         print('*' * 80)
 
@@ -248,7 +240,7 @@ def load_perturbation_record_data_from_hdf5(hdf_file):
                                                    'ideal_start', 'ideal_stop', 'ideal_numobs', 'numobs'))
 
 
-def perturbation_data_to_records(data=None,
+def perturbation_data_to_records(pbproject=HS_PROJECT,
                                  dt=0.01,
                                  cache_to_pickle=False,
                                  overwrite_cached=False,
@@ -269,8 +261,8 @@ def perturbation_data_to_records(data=None,
 
     Parameters
     ----------
-    data: dictionary
-      groups data as returned by "all_perturbations_data", which is the default if data is None
+    pbproject: PBProject object
+      indicates where to find the data files
     dt: float, default 0.01
       the sampling period (note that the "ideal" sampling rate was 100Hz)
     cache_to_pickle: boolean, default True
@@ -286,7 +278,7 @@ def perturbation_data_to_records(data=None,
 
     Examples
     --------
-    >>> data = perturbation_data_to_records()
+    >>> data = perturbation_data_to_records(DCN_PROJECT)
     >>> print 'There are %d records (%d flyids x 8 frequencies)' % (len(data), data['flyid'].nunique())
     There are 208 records (26 flyids x 8 frequencies)
     >>> print 'There are %d control records' % np.sum(data['genotype'] == 'VT37804_TNTE')
@@ -314,13 +306,13 @@ def perturbation_data_to_records(data=None,
     True
     """
     if cache_to_pickle:
-        CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.pickle') \
+        CACHE_FILE = op.join(pbproject.data_root, 'perturbation_bias_munged_data.pickle') \
             if remove_silences else \
-            op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.pickle')
+            op.join(pbproject.data_root, 'perturbation_bias_munged_data_with_silences.pickle')
     else:
-        CACHE_FILE = op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data.h5') \
+        CACHE_FILE = op.join(pbproject.data_root, 'perturbation_bias_munged_data.h5') \
             if remove_silences else \
-            op.join(PERTURBATION_BIAS_DATA_ROOT, 'perturbation_bias_munged_data_with_silences.h5')
+            op.join(pbproject.data_root, 'perturbation_bias_munged_data_with_silences.h5')
 
     # Return cached data
     if op.isfile(CACHE_FILE) and not overwrite_cached:
@@ -329,8 +321,7 @@ def perturbation_data_to_records(data=None,
         return load_perturbation_record_data_from_hdf5(CACHE_FILE)
 
     # Remunge
-    if data is None:
-        data = all_perturbation_data(remove_silences=remove_silences)
+    data = all_perturbation_data(pbproject, remove_silences=remove_silences)
     records = []
     for group, flies in data.iteritems():
         for flyname, f2obs in flies.iteritems():
