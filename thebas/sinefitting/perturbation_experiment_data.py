@@ -14,14 +14,13 @@ import h5py
 import numpy as np
 import pandas as pd
 from pandas import DataFrame
-from pandas.util.testing import assert_frame_equal
-from pandas.util.testing import assert_series_equal
 
 from thebas.externals.tethered_data.misc import rostimearr2datetimeidx
 from thebas.externals.tethered_data.strokelitude import Strokelitude, filter_signals_gaussian, filter_signals_lowpass, \
     detect_noflight, remove_noflight
 from thebas.sinefitting import PERTURBATION_BIAS_SILENCED_FLIES, PERTURBATION_BIAS_KINDAWT_FLIES, \
     PERTURBATION_BIAS_DATA_ROOT, TEST_HDF5
+
 
 ####################################
 # Convenient access to the data as provided by strokelitude
@@ -102,12 +101,14 @@ def perturbation_bias_info():
     Computes information for the sinusoidal perturbation bias used in these experiments.
     The code is adapted from "lisa_bg_cl_perturbation.py".
     """
-    freqs = np.array([0.5, 1, 2, 4, 8, 16, 32, 40])   # Perturbation angular frequencies (rad/s)
-                                                      # Recall dtheta/dt = w = 2*pi*f
-    freqs_on_durations = 16 * np.pi / freqs           # For how long each *angular* frequency is "on" (seconds).
-                                                      # Let a frequency run for 8 complete cycles.
-                                                      # The alternative could be a fixed ontime length for all freqs.
-                                                      # But that could be inconvenient for Lisa and maybe the fly.
+    # Perturbation angular frequencies (rad/s) (Recall dtheta/dt = w = 2*pi*f)
+    freqs = np.array([0.5, 1, 2, 4, 8, 16, 32, 40])
+    # For how long each *angular* frequency is "on" (seconds).
+    # Let a frequency run for 8 complete cycles.
+    # The alternative could be a fixed ontime length for all freqs.
+    # But that could be inconvenient for Lisa and maybe the fly.
+    freqs_on_durations = 16 * np.pi / freqs
+
     freqs_start_stop_times = np.append(0, np.cumsum(freqs_on_durations))
     return freqs, freqs_on_durations, freqs_start_stop_times
     # we might infer this in a general way from the bias signal itself
@@ -201,7 +202,7 @@ def print_data_sizes_summary(data=None):
 # A record per (fly, genotype, frequency) makes for the most sensible access scheme
 ####################################
 
-#---- library independent HDF5 format (to forget about pickles / pytables and anything less standard/durable)
+# ---- library independent HDF5 format (to forget about pickles / pytables and anything less standard/durable)
 
 def save_perturbation_record_data_to_hdf5(data, hdf_file, overwrite=False):
     if op.isfile(hdf_file):
