@@ -1,7 +1,7 @@
 # coding=utf-8
 """Bayesian Models to fit by the data acquired in the perturbation experiment."""
 import numpy as np
-import pymc
+import pymc.distributions
 
 
 def perturbation_signal(times, amplitude=5., phase=0., mean_val=0., freq=0.5, freq_is_angular=True):
@@ -197,9 +197,9 @@ def gpa_t1_slice(group_id, group_data, min_num_obs=10, SMALL=1E-9):
                                         mu=mean_group_amplitude,
                                         tau=1/100.)
     group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id,
-                                    value=25,
-                                    lower=1.,
-                                    upper=50.)  # should probably use a stronger prior
+                                        value=25,
+                                        lower=1.,
+                                        upper=50.)  # should probably use a stronger prior
     # group_amplitude_alpha = pymc.HalfCauchy('amplitudeAlpha_' + group_id, alpha=mean_group_amplitude, beta=25.)
     # group_amplitude_beta = pymc.Uniform('amplitudeBeta_' + group_id, lower=SMALL, upper=100.)
 

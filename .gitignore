@@ -38,3 +38,5 @@ nosetests.xml
 
 # MCMC results
 thebas/sinefitting/MCMC
+
+--*/
