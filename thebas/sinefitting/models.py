@@ -753,6 +753,7 @@ MODEL_FACTORIES = {model.__name__: model for model in [
     gpa_t1,
     gpa_t1_slice,
     gpa_t2_slice,
+    gpa_t3,
     gpa_t3_slice,
     gpad_t1_slice,
     gpa3,
