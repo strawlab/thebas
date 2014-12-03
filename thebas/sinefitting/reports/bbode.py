@@ -42,7 +42,6 @@ def bodelike_plot(pbproject=HS_PROJECT,
     results = results[results.model_id == model_id]
     ctraces = {}
     straces = {}
-    # FIXME: here we got wrong genotypes...
     results.genotype = results.genotype.apply(lambda gen: gen.partition('__')[0])
     # Collect and mix traces for all frequencies
     for (model_id, freq), data in results.groupby(('model_id', 'freq')):
