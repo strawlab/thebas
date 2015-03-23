@@ -1,7 +1,7 @@
 Bayesian Analysis of Strawlab Tethered Data
 ===========================================
 
-[Find discussions in the wiki](https://github.com/strawlab/thebas).
+[Find discussions in the wiki](https://github.com/strawlab/thebas/wiki).
 
 Install
 -------
