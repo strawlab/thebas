@@ -4,7 +4,10 @@
 # Authors: Santi Villalba <sdvillal@gmail.com>
 # Licence: BSD 3 clause
 
-from setuptools import setup
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
 import thebas
 
@@ -20,13 +23,12 @@ setup(
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: BSD 3 clause'
         'Topic :: Scientific/Engineering',
-        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Operating System :: Unix',
     ],
     requires=['h5py',
-              'pymc',   # >= 2.3.4
-              'pydot',  # for pymc model graphs
+              'pymc (>= 2.3.4)',
+              'pydot',  # for pymc model graphs, problem: will probably downgrade pyparsing and give problems with conda
               'numpy',
               'matplotlib',
               'pandas',

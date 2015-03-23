@@ -16,7 +16,7 @@ matplotlib_without_x()
 # One dir to contain'em all
 PERTURBATION_BIAS_ROOT = op.join(op.expanduser('~'), 'data-analysis', 'closed_loop_perturbations')
 if not op.isdir(PERTURBATION_BIAS_ROOT):
-    PERTURBATION_BIAS_ROOT = '/mnt/strawscience/santi/dcn-tethered-bayesian'
+    PERTURBATION_BIAS_ROOT = '/mnt/strawscience/santi/tethered-bayesian'
 
 
 class PBProject(object):
