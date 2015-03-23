@@ -14,8 +14,8 @@ def mann(pbproject=HS_PROJECT, summ=np.mean):
     by_freq = df[['genotype', 'freq', 'flyid', 'wba', 'wba_t']].groupby(('freq',))
     for freq, freq_data in by_freq:
         genotypes = sorted(freq_data['genotype'].unique())
-        blocked = [genotype for genotype in genotypes if 'tnte' in genotype.lower()]
-        control = [genotype for genotype in genotypes if 'tnte' not in genotype.lower()]
+        blocked = [genotype for genotype in genotypes if 'tntin' not in genotype.lower()]
+        control = [genotype for genotype in genotypes if 'tntin' in genotype.lower()]
         for b, c in product(blocked, control):
             bdat = freq_data[freq_data['genotype'] == b]['wba'].apply(summ).dropna()
             cdat = freq_data[freq_data['genotype'] == c]['wba'].apply(summ).dropna()
@@ -72,51 +72,51 @@ if __name__ == '__main__':
 # (look too at meanwba and co. plots)
 #
 # summ=mean
-# freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.34 (MWU p=0.202449)
+# freq=0.5; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.76 (MWU p=0.032061)
 # freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.54 (MWU p=0.719614)
-# freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.31 (MWU p=0.131977)
+# freq=1; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.88 (MWU p=0.001757)
 # freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.59 (MWU p=0.441756)
-# freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.31 (MWU p=0.131977)
+# freq=2; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.76 (MWU p=0.032061)
 # freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.55 (MWU p=0.681618)
-# freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.31 (MWU p=0.117750)
+# freq=4; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.71 (MWU p=0.082194)
 # freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.53 (MWU p=0.837472)
-# freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.48 (MWU p=0.862015)
+# freq=8; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.55 (MWU p=0.728126)
 # freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.50 (MWU p=1.000000)
-# freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 12 blocked flies
-# 	AUC=0.41 (MWU p=0.479084)
+# freq=16; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.52 (MWU p=0.926445)
 # freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 12 blocked flies
 # 	AUC=0.44 (MWU p=0.665006)
-# freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.49 (MWU p=0.947645)
+# freq=32; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.52 (MWU p=0.877717)
 # freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 11 blocked flies
 # 	AUC=0.50 (MWU p=0.975451)
-# freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.42 (MWU p=0.554530)
+# freq=40; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.65 (MWU p=0.223731)
 # freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 11 blocked flies
 # 	AUC=0.59 (MWU p=0.451345)
@@ -146,51 +146,51 @@ if __name__ == '__main__':
 # 	AUC=0.47 (MWU p=0.816961)
 # --------------------------------------------------------------------------------
 # summ=median
-# freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.29 (MWU p=0.082194)
+# freq=0.5; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.80 (MWU p=0.012729)
 # freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.52 (MWU p=0.877731)
-# freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.28 (MWU p=0.072489)
+# freq=1; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.86 (MWU p=0.003129)
 # freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.62 (MWU p=0.305061)
-# freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.33 (MWU p=0.164384)
+# freq=2; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.64 (MWU p=0.246566)
 # freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.41 (MWU p=0.472789)
-# freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.30 (MWU p=0.104756)
+# freq=4; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.68 (MWU p=0.147501)
 # freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.45 (MWU p=0.681618)
-# freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.45 (MWU p=0.728126)
+# freq=8; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.55 (MWU p=0.685069)
 # freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.49 (MWU p=0.918309)
-# freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 12 blocked flies
-# 	AUC=0.45 (MWU p=0.689122)
+# freq=16; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.55 (MWU p=0.734985)
 # freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 12 blocked flies
 # 	AUC=0.47 (MWU p=0.839860)
-# freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.46 (MWU p=0.792813)
+# freq=32; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.48 (MWU p=0.926445)
 # freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 11 blocked flies
 # 	AUC=0.49 (MWU p=0.975451)
-# freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.46 (MWU p=0.792813)
+# freq=40; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.68 (MWU p=0.147501)
 # freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 11 blocked flies
 # 	AUC=0.57 (MWU p=0.562343)
@@ -220,51 +220,51 @@ if __name__ == '__main__':
 # 	AUC=0.45 (MWU p=0.661972)
 # --------------------------------------------------------------------------------
 # summ=center-max
-# freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.44 (MWU p=0.643011)
+# freq=0.5; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.38 (MWU p=0.324663)
 # freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.28 (MWU p=0.064870)
-# freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.53 (MWU p=0.816735)
+# freq=1; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.40 (MWU p=0.417302)
 # freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.43 (MWU p=0.538301)
-# freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.56 (MWU p=0.643011)
+# freq=2; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.24 (MWU p=0.037004)
 # freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.19 (MWU p=0.007661)
-# freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.73 (MWU p=0.063744)
+# freq=4; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.21 (MWU p=0.017530)
 # freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.40 (MWU p=0.411924)
-# freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.52 (MWU p=0.862015)
+# freq=8; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.41 (MWU p=0.451345)
 # freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.41 (MWU p=0.441756)
-# freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 12 blocked flies
-# 	AUC=0.58 (MWU p=0.558760)
+# freq=16; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.28 (MWU p=0.079421)
 # freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 12 blocked flies
 # 	AUC=0.36 (MWU p=0.260236)
-# freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.61 (MWU p=0.393302)
+# freq=32; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.34 (MWU p=0.207061)
 # freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 11 blocked flies
 # 	AUC=0.45 (MWU p=0.689122)
-# freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.54 (MWU p=0.792813)
+# freq=40; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.34 (MWU p=0.182683)
 # freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 11 blocked flies
 # 	AUC=0.38 (MWU p=0.353934)
@@ -294,51 +294,51 @@ if __name__ == '__main__':
 # 	AUC=0.68 (MWU p=0.129187)
 # --------------------------------------------------------------------------------
 # summ=center-mad-max
-# freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.39 (MWU p=0.384821)
+# freq=0.5; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.35 (MWU p=0.223731)
 # freq=0.5; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.17 (MWU p=0.004795)
-# freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.54 (MWU p=0.772059)
+# freq=1; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.38 (MWU p=0.324663)
 # freq=1; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.35 (MWU p=0.199825)
-# freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.58 (MWU p=0.523928)
+# freq=2; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.23 (MWU p=0.027694)
 # freq=2; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.17 (MWU p=0.004081)
-# freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.71 (MWU p=0.092926)
+# freq=4; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.19 (MWU p=0.010797)
 # freq=4; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.34 (MWU p=0.182422)
-# freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 13 blocked flies
-# 	AUC=0.59 (MWU p=0.486906)
+# freq=8; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.33 (MWU p=0.164384)
 # freq=8; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 13 blocked flies
 # 	AUC=0.40 (MWU p=0.383320)
-# freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 12 blocked flies
-# 	AUC=0.56 (MWU p=0.644373)
+# freq=16; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.30 (MWU p=0.102898)
 # freq=16; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 12 blocked flies
 # 	AUC=0.39 (MWU p=0.370844)
-# freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.61 (MWU p=0.393302)
+# freq=32; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 12 control flies and 11 blocked flies
+# 	AUC=0.35 (MWU p=0.230084)
 # freq=32; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 12 control flies and 11 blocked flies
 # 	AUC=0.45 (MWU p=0.689122)
-# freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_KIR
-# 	There are 11 control flies and 11 blocked flies
-# 	AUC=0.52 (MWU p=0.895514)
+# freq=40; VT58487_tshirtgal80_KIR vs VT58487_tshirtgal80_TNTin
+# 	There are 13 control flies and 11 blocked flies
+# 	AUC=0.34 (MWU p=0.182683)
 # freq=40; VT58487_tshirtgal80_TNTE vs VT58487_tshirtgal80_TNTin
 # 	There are 13 control flies and 11 blocked flies
 # 	AUC=0.36 (MWU p=0.246566)
