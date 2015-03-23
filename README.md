@@ -19,7 +19,6 @@ pip install joblib argh
 - Install thebas. Either clone the repository and install in development mode (recommended)...
  
 ```sh
-# Clone the repository
 git clone https://github.com/strawlab/thebas
 pip install -e thebas
 ```
