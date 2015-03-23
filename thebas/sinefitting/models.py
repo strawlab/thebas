@@ -634,6 +634,59 @@ def gpa3(group_id, group_data, min_num_obs=10):
     return model, {}
 
 
+def gpa33(group_id, group_data, min_num_obs=10):
+    """Same as gpa3, but just fixes the parameters of the hyperfly to non-committal values."""
+
+    # check and clean data
+    group_data = sanity_checks(group_data, min_num_obs=min_num_obs)
+
+    # --- group hyperpriors...
+    group_id = 'group="%s"' % group_id
+    # group phase
+    group_phase = pymc.CircVonMises('phase_' + group_id, 0, 1E-6)
+    # group amplitude
+    max_amplitude = np.max([np.max(np.abs(fly.wba)) for _, fly in group_data.iterrows()])
+    group_amplitude = pymc.Uniform('amplitude_' + group_id, lower=0, upper=max_amplitude)
+    # just max_amplitude is not ok
+
+    def fly_model(fly):
+
+        perturbation_freq = fly['freq']
+        time = fly['wba_t']
+        signal = fly['wba']
+        flyid = 'fly=%s' % str(fly['flyid'])
+
+        # --- priors
+        phase_kappa = pymc.Uniform('kappa_' + flyid, 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
+        phase = pymc.CircVonMises('phase_' + flyid,              # mu shrinked to the group phase
+                                  mu=group_phase,
+                                  kappa=phase_kappa)             # phase ~ VonMises(mu_group, kappa_group)
+        # Uninformative for the signal's DC, amplitude and noise's sd...
+        mean_val = pymc.Uniform('DC_' + flyid, -max_amplitude, max_amplitude)
+        amplitude = pymc.Uniform('amplitude_' + flyid, lower=0, upper=2 * group_amplitude)
+        sigma = pymc.Uniform('sigma_' + flyid, 0, max_amplitude)
+
+        @pymc.deterministic(plot=False, name='modeledSignal_' + flyid)
+        def modeled_signal(times=time, amplitude=amplitude, phase=phase, mean_val=mean_val):  # We just "fix" frequency
+            return perturbation_signal(times=times,
+                                       amplitude=amplitude,
+                                       phase=phase,
+                                       mean_val=mean_val,
+                                       freq=perturbation_freq)
+
+        # --- likelihood
+        y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
+
+        # --- fly model
+        return [y, amplitude, phase, sigma, mean_val]
+
+    # --- put all together
+    model = [group_phase, group_amplitude]
+    for _, fly in group_data.iterrows():
+        model += fly_model(fly)
+    return model, {}
+
+
 def gpa3hc1(group_id, group_data, min_num_obs=10):
     """Like GPA3 but using a Half-Cauchy instead of a uniform amplitude."""
 
@@ -757,6 +810,7 @@ MODEL_FACTORIES = {model.__name__: model for model in [
     gpa_t3_slice,
     gpad_t1_slice,
     gpa3,
+    gpa33,
     gpa3hc1,
     gpa3hc2,
 ]}

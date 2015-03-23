@@ -57,8 +57,8 @@ def sample(pbproject='dcn',
 
 
 def cl(PROJECTS=sorted(PB_PROJECTS.keys()),
-       MODELS=('gpa_t3_slice', 'gpa_t3'),
-       FREQS=(0.5, 1., 2., 4., 8., 16., 32., 40.)[::-1],  # angular frequencies (rad/s)
+       MODELS=('gpa33',),
+       FREQS=(4.0, 8.0, 0.5, 1.0, 2.0, 16.0, 32.0, 40.0),  # angular frequencies (rad/s)
        log_dir='~'):
     """Generates command lines to launch the script with different parameters."""
     for project in PROJECTS:
