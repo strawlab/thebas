@@ -1,5 +1,10 @@
 Bayesian Analysis of Strawlab Tethered Data
--------------------------------------------
+===========================================
+
+[Find discussions in the wiki](https://github.com/strawlab/thebas).
+
+Install
+-------
 
 All dependencies are either declared in *setup.py* or hardcopied in the *externals* package. This makes
 everything work on current anaconda (as per 2015/03/23).
@@ -26,6 +31,9 @@ pip install 'git+git://github.com/strawlab/thebas.git'
 ```
 
 Everything should already be installed in strz (using the default anaconda environment in */opt/anaconda*).
+
+Use
+---
 
 This is a small tour on the different scripts provided.
  
