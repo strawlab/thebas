@@ -634,7 +634,7 @@ def gpa3(group_id, group_data, min_num_obs=10):
     return model, {}
 
 
-def gpa33(group_id, group_data, min_num_obs=10):
+def gpa33(group_id, group_data, min_num_obs=10, preprocessing=None):
     """Same as gpa3, but just fixes the parameters of the hyperfly to non-committal values."""
 
     # check and clean data
@@ -655,6 +655,11 @@ def gpa33(group_id, group_data, min_num_obs=10):
         time = fly['wba_t']
         signal = fly['wba']
         flyid = 'fly=%s' % str(fly['flyid'])
+
+        if preprocessing == 'mean0':
+            signal = signal - signal.mean()
+        elif preprocessing == 'standardize':
+            signal = (signal - signal.mean()) / signal.std()
 
         # --- priors
         phase_kappa = pymc.Uniform('kappa_' + flyid, 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
@@ -685,6 +690,14 @@ def gpa33(group_id, group_data, min_num_obs=10):
     for _, fly in group_data.iterrows():
         model += fly_model(fly)
     return model, {}
+
+
+def gpa33std(group_id, group_data, min_num_obs=10):
+    return gpa33(group_id, group_data, min_num_obs=min_num_obs, preprocessing='standardize')
+
+
+def gpa33mean0(group_id, group_data, min_num_obs=10):
+    return gpa33(group_id, group_data, min_num_obs=min_num_obs, preprocessing='mean0')
 
 
 def gpa3hc1(group_id, group_data, min_num_obs=10):
@@ -811,6 +824,8 @@ MODEL_FACTORIES = {model.__name__: model for model in [
     gpad_t1_slice,
     gpa3,
     gpa33,
+    gpa33std,
+    gpa33mean0,
     gpa3hc1,
     gpa3hc2,
 ]}
