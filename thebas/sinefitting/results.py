@@ -261,3 +261,6 @@ if __name__ == '__main__':
 #
 # TODO: check that MAP has worked (no nans and the like)
 #
+
+# Note: remove cached traces:
+# find . -wholename '*/db/*.pickle' -not -iname 'model=*' -not -iname 'traces*' -exec rm -f {} \;
