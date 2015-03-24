@@ -659,7 +659,9 @@ def gpa33(group_id, group_data, min_num_obs=10, preprocessing=None):
         if preprocessing == 'mean0':
             signal = signal - signal.mean()
         elif preprocessing == 'standardize':
-            signal = (signal - signal.mean()) / signal.std()
+            std = signal.std()
+            std = 1.0 if std < 1E-6 else std
+            signal = (signal - signal.mean()) / std
 
         # --- priors
         phase_kappa = pymc.Uniform('kappa_' + flyid, 0, 10.0)    # hyperparameter for the phase (kappa ~ Uniform(0, 10))
