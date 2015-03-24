@@ -132,6 +132,8 @@ if __name__ == '__main__':
         ('gpa_t3', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa3', ('amplitude', 'phase')),
         ('gpa33', ('amplitude', 'phase')),
+        ('gpa33mean0', ('amplitude', 'phase')),
+        ('gpa33std', ('amplitude', 'phase')),
         ('gpa3hc1', ('amplitude', 'phase')),
         ('gpa3hc2', ('amplitude', 'phase')),
     )
