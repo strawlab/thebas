@@ -4,6 +4,8 @@ from itertools import product
 import os.path as op
 
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from pymc import gelman_rubin
 from pymc.utils import hpd
