@@ -127,15 +127,15 @@ def failsafe_plot(pbproject, control_genotype, blocked_genotype, model, var, fig
 if __name__ == '__main__':
 
     models_hypervars = (
+        ('gpa33', ('amplitude', 'phase')),
+        ('gpa33mean0', ('amplitude', 'phase')),
+        ('gpa33std', ('amplitude', 'phase')),
         ('gpa_t1', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa_t1_slice', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa_t2_slice', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa_t3_slice', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa_t3', ('amplitudeAlpha', 'amplitudeBeta', 'phaseKappa', 'phaseMu')),
         ('gpa3', ('amplitude', 'phase')),
-        ('gpa33', ('amplitude', 'phase')),
-        ('gpa33mean0', ('amplitude', 'phase')),
-        ('gpa33std', ('amplitude', 'phase')),
         ('gpa3hc1', ('amplitude', 'phase')),
         ('gpa3hc2', ('amplitude', 'phase')),
     )
