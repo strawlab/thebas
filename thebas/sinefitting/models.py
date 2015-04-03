@@ -714,7 +714,7 @@ def gpa333(group_id, group_data, min_num_obs=10, preprocessing=None):
 
     # group phase - roughly equivalent to a uniform distribution in [-pi, pi]
     group_phase = pymc.CircVonMises('phase_' + group_id, 0, 1E-6)
-    
+
     # group amplitude
     max_amplitude = np.max([np.max(np.abs(fly.wba)) for _, fly in group_data.iterrows()])
     group_amplitude = pymc.Uniform('amplitude_' + group_id, lower=0, upper=max_amplitude)
@@ -725,6 +725,8 @@ def gpa333(group_id, group_data, min_num_obs=10, preprocessing=None):
 
     # uninformative for noise's sd...
     group_sigma = pymc.Uniform('sigma_' + group_id, 0, max_amplitude)
+
+    # TODO: do not fix frequency, maybe, as discussed with T.
 
     def fly_model(fly):
 
