@@ -127,6 +127,7 @@ def failsafe_plot(pbproject, control_genotype, blocked_genotype, model, var, fig
 if __name__ == '__main__':
 
     models_hypervars = (
+        ('gpa333', ('amplitude', 'phase')),
         ('gpa33', ('amplitude', 'phase')),
         ('gpa33mean0', ('amplitude', 'phase')),
         ('gpa33std', ('amplitude', 'phase')),
