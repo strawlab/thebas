@@ -56,6 +56,9 @@ cd thebas
 # This munges these data into a more suitable format for analysis 
 # This is an example of data loading that also does some crazy printing
 python thebas/sinefitting/perturbation_experiment.py
+# Note that the last version of the munged data is in this repo
+# (directory data). So every further script could be run without
+# any access to strawscience.
 
 # This shows examples of command lines that can be used to fit bayesian models...
 python thebas/sinefitting/samplers.py cl
