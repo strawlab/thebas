@@ -7,6 +7,8 @@ Exploring and understanding
  - [Find discussions in the wiki](https://github.com/strawlab/thebas/wiki).
 
  - **Slides**. I gave a talk early on the process of writing the code (so the slides are fairly outdated). I can send it to you, or you should be able to find it in the talks directory on the strawlab central storage, somewhere like "santi/2014/2014-02-13-labmeeting-bayesian". If you open the HTML and put it in full screen (so elements should not be moved), at some point you will be able to see a graphical representation of one of the models, which should prove useful to understand what they do. Also be careful and do not look at the results, they changed a lot since them and I even remember some plot labels were messed when I gave the talk.
+ 
+ - **[Andreas FAQ python, with answers](https://github.com/strawlab/thebas/blob/master/doc/andreas_questions.py)**
 
 
 Install
