@@ -59,13 +59,13 @@ group_amp_beta = pymc.Uniform("amp_beta", value=25, lower=1.0, upper=50.0)
 #
 # No. Remember, this is Bayesian analysis. We do not sample directly from these distributions.
 # The sampler will decide how to move in the parameter space, devoting more time in areas
-# of high density.
+# of the posterior with high density.
 # These are the priors. They encode how we think these parameters are distributed (for the fly groups).
-# But they could (should in an ideal world) be "overpowered" by they data if they are incorrect.
+# But they could (should in an ideal world) be "overpowered" by the data if they are incorrect.
 # In this case, these priors are quite non-committal (also called "flat", "uninformative"),
 # meaning we originally assign a fair amount of credibility to a wide range of parameter values.
 # We will reasign that credibility given the data we observe during the simulation.
-# The posterior distribution (what we are looking for to know) might not look at
+# The posterior distribution (what we seek to know) might not look at
 # all like these priors. For example, the phase kappa posterior might have 99% of its values on a
 # narrow band around 5 if there is where the real value distribute has a mode, while here
 # our prior is a unirmly distributed between 0 and 10.
@@ -76,7 +76,7 @@ group_amp_beta = pymc.Uniform("amp_beta", value=25, lower=1.0, upper=50.0)
 #
 # In fact, I think that these priors are only used for:
 #   - sampling the initial value of the parameters in the simulation
-#   - compute the prior probability of theta to weight against the likelihood
+#   - compute the prior probability of theta to weight the data likelihood
 #
 
 
@@ -99,7 +99,7 @@ def fly_model(fly):
                                 beta=group_amplitude_beta)
     # ANSWER: Again, these are the priors and can be overpowered.
     # Notice how the means priors are distributed after ("shrinked to") the group priors.
-    # Also, note that there are other kind of models in thebas where the group variables
+    # Also, note that there are other kinds of models in thebas where the group variables
     # are modelled differently. How to model the group "hyper-priors" was one of the most
     # important questions we had fun answering.
 
@@ -115,12 +115,12 @@ def fly_model(fly):
     # Note this is a pymc2 "deterministic": its values are fully determined by
     # its parents (in this case, the fly amplitude and phase values).
     # In other words, no random number generator is directly involved on each iteration
-    # of the simulation when sampling its value, but the values that
+    # of the simulation when sampling its value, but just the values that
     # the parents parameters take at that iteration are plugged directly into the equation.
     # Note that here there is a, somebody would call nasty, trick to include the time into the
     # equation: we use a closure where "time" is the times we read on top of the function.
     # They are fixed in our experiments, and while this python wonder is non very standard
-    # practice in pymc, it gets the job done...
+    # practice in pymc and would be hard to use in other frameworks like stan, it gets the job done...
 
     # XXX QUESTION 4:
     #  y represents the likelyhood that given sampled parameters used in model_signal
@@ -129,9 +129,9 @@ def fly_model(fly):
     sigma = pymc.Uniform('sigma_' + flyid, 1e-9, 10.)
     # --- likelihood (each observation is modeled as a Gaussian, all share their sd)
     y = pymc.Normal('y_' + flyid, mu=modeled_signal, tau=1.0/sigma**2, value=signal, observed=True)
-    # ANSWER: We model each fly's response as a Gaussian with a mean given
-    # by the "ideal response" defined above; the parameters of the "ideal response"
-    # will be the values sampled from the current iteration of the MCMC simulation.
+    # ANSWER: We model each fly response as a Gaussian with a mean given
+    # by the "ideal response" defined above. As said, the parameters of the "ideal response"
+    # will be the values sampled from the current iteration by the MCMC sampler.
     # Note that this is a multivariate Gaussian. Its dimensionality is equal
     # to the number of times we have sampled the signal (which in turn, in
     # Lisa's experimental setup, depends on the frequency of the stimulus; remember,
@@ -162,7 +162,7 @@ M.sample(iter=80000, burn=20000, progress_bar=False)
 # Given the previously accepted "theta_last" and "p_last(last_theta|data)".
 #
 #   1- The sampler samples (proposes) a value for theta_current given theta_last.
-#      It usually moves somehow in the parameter space, usually sampling from some
+#      It usually moves somehow in the parameter space, usually by sampling from some
 #      (normal) distribution centered at theta_last. Does not care about the priors here!
 #
 #     1.1- It starts by sampling in the higher level of our hierarchy (the group),
@@ -184,7 +184,7 @@ M.sample(iter=80000, burn=20000, progress_bar=False)
 #   2- Compute the likelihood of the data given current theta.
 #      This means computing the pdf of the data given the multivariate Gaussian at the
 #      bottom of the model. Weight it by the prior of theta.
-#          p_current = p(data | theta_current) * p(theta_current)
+#          p_current = p(theta_current|data) = p(data | theta_current) * p(theta_current)
 #
 #   3- Accept current theta proposal?
 #      We need to decide if we accept theta, therefore adding it to the trace
@@ -196,4 +196,7 @@ M.sample(iter=80000, burn=20000, progress_bar=False)
 #        - If accepted, we will collect theta_current and use it when generating
 #          a new proposal for theta in the next iteration.
 #        - If not accepted, we will collect and keep using theta_last.
+#
+#  The result of our simulation are all the collected thetas, which should be a good sample
+#  of the real posterior if the MCMC chains have "converged".
 #
